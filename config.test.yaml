@@ -1,0 +1,114 @@
+# 简单测试配置
+game:
+  name: "测试游戏"
+  rounds: 2
+  round_end_mode: "fixed"
+  songs_per_round: 3
+
+selection_rules:
+  mode: "random"
+  allow_duplicates: false
+  weight_method: "equal"
+
+special_songs:
+  - song_id: 3
+    round: 2
+    position: -1
+
+players:
+  - id: 1
+    name: "测试玩家1"
+    avatar: "./avatars/player1.jpg"
+    team: "A队"
+  - id: 2
+    name: "测试玩家2"
+    avatar: "./avatars/player2.jpg"
+    team: "B队"
+
+songs:
+  - id: 1
+    title: "测试歌曲1"
+    artist: "歌手A"
+    album: "专辑A"
+    path: "./music/song1.mp3"
+    cover: "./covers/album_a.jpg"
+    score: 10
+    weight: 1.0
+    duration: 180
+    tags: ["流行"]
+
+  - id: 2
+    title: "测试歌曲2"
+    artist: "歌手B"
+    album: "专辑B"
+    path: "./music/song2.mp3"
+    cover: "./covers/album_b.jpg"
+    score: 15
+    weight: 1.5
+    duration: 200
+    tags: ["摇滚"]
+
+  - id: 3
+    title: "测试歌曲3 (特殊)"
+    artist: "歌手C"
+    album: "专辑C"
+    path: "./music/song3.mp3"
+    cover: "./covers/album_c.jpg"
+    score: 20
+    weight: 2.0
+    duration: 240
+    tags: ["特殊"]
+    is_special: true
+
+  - id: 4
+    title: "测试歌曲4"
+    artist: "歌手D"
+    album: "专辑D"
+    path: "./music/song4.mp3"
+    cover: "./covers/album_d.jpg"
+    score: 12
+    weight: 1.2
+    duration: 190
+    tags: ["电子"]
+
+  - id: 5
+    title: "测试歌曲5"
+    artist: "歌手E"
+    album: "专辑E"
+    path: "./music/song5.mp3"
+    cover: "./covers/album_e.jpg"
+    score: 8
+    weight: 0.8
+    duration: 210
+    tags: ["抒情"]
+
+  - id: 6
+    title: "测试歌曲6"
+    artist: "歌手F"
+    album: "专辑F"
+    path: "./music/song6.mp3"
+    cover: "./covers/album_f.jpg"
+    score: 10
+    weight: 1.0
+    duration: 195
+    tags: ["嘻哈"]
+
+playback:
+  clip_duration: 30
+  start_position: -1
+  fade_duration: 2
+  volume: 0.8
+
+scoring:
+  title_correct: 1.0
+  artist_correct: 0.5
+  album_bonus: 0.3
+  speed_bonus: 5
+  time_limit: 30
+
+ui:
+  theme_color: "#FF6B6B"
+  show_cover: true
+  show_lyrics: false
+  show_leaderboard: true
+

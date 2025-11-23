@@ -1,0 +1,266 @@
+# yaml-language-server: $schema=./config.schema.json
+
+# 燃炸英语夜 - 猜歌游戏配置文件
+# Configuration file for the music guessing game
+
+# 游戏基本设置
+game:
+  # 游戏名称
+  name: "燃炸英语夜"
+  # 总轮数
+  rounds: 3
+  # 每轮结束方式: "fixed" (固定歌曲数), "manual" (手动截止)
+  round_end_mode: "fixed"
+  # 当 round_end_mode 为 "fixed" 时，每轮的歌曲数量
+  songs_per_round: 5
+
+# 歌曲抽取规则
+selection_rules:
+  # 抽取模式: "random" (随机), "sequential" (顺序), "weighted" (加权随机)
+  mode: "weighted"
+  # 是否允许重复抽取同一首歌
+  allow_duplicates: false
+  # 当 mode 为 "weighted" 时，权重计算方式
+  # "score" - 基于分值, "custom" - 使用歌曲自定义权重, "equal" - 平等权重
+  weight_method: "custom"
+
+# 特殊曲目设置
+special_songs:
+  # 固定出现的特殊曲目
+  - song_id: 5  # 歌曲ID（对应songs列表中的序号）
+    round: 2    # 出现在第几轮（从1开始）
+    position: 3 # 出现在该轮的第几首（从1开始，-1表示最后一首）
+  - song_id: 10
+    round: 3
+    position: -1  # 最后一首
+
+# 玩家列表
+players:
+  - id: 1
+    name: "张三"
+    avatar: "./avatars/zhangsan.jpg"  # 相对路径
+    team: "红队"
+  - id: 2
+    name: "李四"
+    avatar: "https://example.com/avatars/lisi.jpg"  # URL路径
+    team: "红队"
+  - id: 3
+    name: "王五"
+    avatar: "./avatars/wangwu.jpg"
+    team: "蓝队"
+  - id: 4
+    name: "赵六"
+    avatar: "./avatars/zhaoliu.jpg"
+    team: "蓝队"
+
+# 歌曲列表
+songs:
+  - id: 1
+    title: "Shape of You"
+    artist: "Ed Sheeran"
+    album: "÷ (Divide)"
+    # 歌曲文件路径（支持URL、绝对路径、相对路径）
+    path: "./music/ed_sheeran/shape_of_you.mp3"
+    # 专辑封面路径
+    cover: "./covers/divide.jpg"
+    # 歌曲分值
+    score: 10
+    # 自定义权重（用于加权随机抽取）
+    weight: 1.0
+    # 歌曲时长（秒）
+    duration: 233
+    # 标签
+    tags: ["流行", "热门", "2017"]
+
+  - id: 2
+    title: "Blinding Lights"
+    artist: "The Weeknd"
+    album: "After Hours"
+    path: "https://example.com/music/blinding_lights.mp3"
+    cover: "https://example.com/covers/after_hours.jpg"
+    score: 15
+    weight: 1.5
+    duration: 200
+    tags: ["流行", "电子", "2020"]
+
+  - id: 3
+    title: "Levitating"
+    artist: "Dua Lipa"
+    album: "Future Nostalgia"
+    path: "./music/dua_lipa/levitating.mp3"
+    cover: "./covers/future_nostalgia.jpg"
+    score: 12
+    weight: 1.2
+    duration: 203
+    tags: ["流行", "舞曲", "2020"]
+
+  - id: 4
+    title: "Watermelon Sugar"
+    artist: "Harry Styles"
+    album: "Fine Line"
+    path: "./music/harry_styles/watermelon_sugar.mp3"
+    cover: "./covers/fine_line.jpg"
+    score: 10
+    weight: 1.0
+    duration: 174
+    tags: ["流行", "摇滚", "2019"]
+
+  - id: 5
+    title: "Bad Guy"
+    artist: "Billie Eilish"
+    album: "When We All Fall Asleep, Where Do We Go?"
+    path: "./music/billie_eilish/bad_guy.mp3"
+    cover: "./covers/wwafawdwg.jpg"
+    score: 20
+    weight: 2.0
+    duration: 194
+    tags: ["流行", "电子", "热门", "特殊"]
+    # 特殊标记
+    is_special: true
+
+  - id: 6
+    title: "Circles"
+    artist: "Post Malone"
+    album: "Hollywood's Bleeding"
+    path: "./music/post_malone/circles.mp3"
+    cover: "./covers/hollywoods_bleeding.jpg"
+    score: 8
+    weight: 0.8
+    duration: 215
+    tags: ["流行", "R&B", "2019"]
+
+  - id: 7
+    title: "Don't Start Now"
+    artist: "Dua Lipa"
+    album: "Future Nostalgia"
+    path: "./music/dua_lipa/dont_start_now.mp3"
+    cover: "./covers/future_nostalgia.jpg"
+    score: 12
+    weight: 1.2
+    duration: 183
+    tags: ["流行", "舞曲", "2019"]
+
+  - id: 8
+    title: "Sunflower"
+    artist: "Post Malone, Swae Lee"
+    album: "Spider-Man: Into the Spider-Verse"
+    path: "./music/post_malone/sunflower.mp3"
+    cover: "./covers/spider_verse.jpg"
+    score: 10
+    weight: 1.0
+    duration: 158
+    tags: ["流行", "嘻哈", "2018", "电影原声"]
+
+  - id: 9
+    title: "Señorita"
+    artist: "Shawn Mendes, Camila Cabello"
+    album: "Shawn Mendes"
+    path: "./music/shawn_mendes/senorita.mp3"
+    cover: "./covers/shawn_mendes.jpg"
+    score: 15
+    weight: 1.5
+    duration: 191
+    tags: ["流行", "拉丁", "2019"]
+
+  - id: 10
+    title: "Bohemian Rhapsody"
+    artist: "Queen"
+    album: "A Night at the Opera"
+    path: "./music/queen/bohemian_rhapsody.mp3"
+    cover: "./covers/night_at_opera.jpg"
+    score: 25
+    weight: 2.5
+    duration: 354
+    tags: ["摇滚", "经典", "史诗", "特殊"]
+    is_special: true
+
+  - id: 11
+    title: "Someone Like You"
+    artist: "Adele"
+    album: "21"
+    path: "./music/adele/someone_like_you.mp3"
+    cover: "./covers/21.jpg"
+    score: 10
+    weight: 1.0
+    duration: 285
+    tags: ["流行", "抒情", "2011"]
+
+  - id: 12
+    title: "Uptown Funk"
+    artist: "Mark Ronson ft. Bruno Mars"
+    album: "Uptown Special"
+    path: "./music/mark_ronson/uptown_funk.mp3"
+    cover: "./covers/uptown_special.jpg"
+    score: 12
+    weight: 1.2
+    duration: 269
+    tags: ["流行", "放克", "2014"]
+
+  - id: 13
+    title: "Rolling in the Deep"
+    artist: "Adele"
+    album: "21"
+    path: "./music/adele/rolling_in_the_deep.mp3"
+    cover: "./covers/21.jpg"
+    score: 10
+    weight: 1.0
+    duration: 228
+    tags: ["流行", "灵魂", "2010"]
+
+  - id: 14
+    title: "Happier"
+    artist: "Marshmello, Bastille"
+    album: "Happier"
+    path: "./music/marshmello/happier.mp3"
+    cover: "./covers/happier.jpg"
+    score: 8
+    weight: 0.8
+    duration: 214
+    tags: ["电子", "流行", "2018"]
+
+  - id: 15
+    title: "Perfect"
+    artist: "Ed Sheeran"
+    album: "÷ (Divide)"
+    path: "./music/ed_sheeran/perfect.mp3"
+    cover: "./covers/divide.jpg"
+    score: 10
+    weight: 1.0
+    duration: 263
+    tags: ["流行", "抒情", "2017"]
+
+# 游戏播放设置
+playback:
+  # 每首歌播放时长（秒），-1 表示播放完整歌曲
+  clip_duration: 30
+  # 开始播放位置（秒），-1 表示随机位置
+  start_position: -1
+  # 淡入淡出时间（秒）
+  fade_duration: 2
+  # 音量 (0.0 - 1.0)
+  volume: 0.8
+
+# 评分规则
+scoring:
+  # 猜对歌名得分比例
+  title_correct: 1.0
+  # 猜对歌手得分比例
+  artist_correct: 0.5
+  # 猜对专辑额外加分比例
+  album_bonus: 0.3
+  # 最快答题额外加分
+  speed_bonus: 5
+  # 答题时间限制（秒）
+  time_limit: 30
+
+# 界面设置
+ui:
+  # 主题色
+  theme_color: "#FF6B6B"
+  # 显示专辑封面
+  show_cover: true
+  # 显示歌词（如果可用）
+  show_lyrics: false
+  # 显示实时排行榜
+  show_leaderboard: true
+
