@@ -18,12 +18,17 @@ special_songs:
 players:
   - id: 1
     name: "测试玩家1"
-    avatar: "./avatars/player1.jpg"
+    avatar: "./avatars/player1.jpg"  # 图片头像
+#    avatar: "./public/favicon.ico"  # 图片头像
     team: "A队"
   - id: 2
     name: "测试玩家2"
-    avatar: "./avatars/player2.jpg"
+    avatar: "小二"                   # 文字头像
     team: "B队"
+  - id: 3
+    name: "测试玩家3"
+    # avatar 省略，显示首字母 "测"
+    team: "C队"
 
 songs:
   - id: 1
@@ -104,6 +109,7 @@ scoring:
   artist_correct: 0.5
   album_bonus: 0.3
   speed_bonus: 5
+  speed_threshold: 10  # 快答阈值
   time_limit: 30
 
 ui:

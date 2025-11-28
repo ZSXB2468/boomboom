@@ -10,7 +10,7 @@ game:
   # 总轮数
   rounds: 3
   # 每轮结束方式: "fixed" (固定歌曲数), "manual" (手动截止)
-  round_end_mode: "fixed"
+  round_end_mode: "manual"
   # 当 round_end_mode 为 "fixed" 时，每轮的歌曲数量
   songs_per_round: 5
 
@@ -38,19 +38,19 @@ special_songs:
 players:
   - id: 1
     name: "张三"
-    avatar: "./avatars/zhangsan.jpg"  # 相对路径
+    avatar: "./avatars/zhangsan.jpg"  # 相对路径（显示图片）
     team: "红队"
   - id: 2
     name: "李四"
-    avatar: "https://example.com/avatars/lisi.jpg"  # URL路径
+    avatar: "https://example.com/avatars/lisi.jpg"  # URL路径（显示图片）
     team: "红队"
   - id: 3
     name: "王五"
-    avatar: "./avatars/wangwu.jpg"
+    avatar: "王五"  # 文字头像（显示最多前两个字）
     team: "蓝队"
   - id: 4
     name: "赵六"
-    avatar: "./avatars/zhaoliu.jpg"
+    # avatar 字段省略，将使用名字首字母 "赵"
     team: "蓝队"
 
 # 歌曲列表
@@ -69,6 +69,8 @@ songs:
     weight: 1.0
     # 歌曲时长（秒）
     duration: 233
+    # 副歌开始时间点（秒），可选
+    chorus_time: 58
     # 标签
     tags: ["流行", "热门", "2017"]
 
@@ -81,6 +83,7 @@ songs:
     score: 15
     weight: 1.5
     duration: 200
+    chorus_time: 80
     tags: ["流行", "电子", "2020"]
 
   - id: 3
@@ -92,6 +95,7 @@ songs:
     score: 12
     weight: 1.2
     duration: 203
+    chorus_time: 62
     tags: ["流行", "舞曲", "2020"]
 
   - id: 4
@@ -103,6 +107,7 @@ songs:
     score: 10
     weight: 1.0
     duration: 174
+    chorus_time: 45
     tags: ["流行", "摇滚", "2019"]
 
   - id: 5
@@ -114,6 +119,7 @@ songs:
     score: 20
     weight: 2.0
     duration: 194
+    chorus_time: 72
     tags: ["流行", "电子", "热门", "特殊"]
     # 特殊标记
     is_special: true
@@ -127,6 +133,7 @@ songs:
     score: 8
     weight: 0.8
     duration: 215
+    chorus_time: 92
     tags: ["流行", "R&B", "2019"]
 
   - id: 7
@@ -171,6 +178,7 @@ songs:
     score: 25
     weight: 2.5
     duration: 354
+    chorus_time: 174
     tags: ["摇滚", "经典", "史诗", "特殊"]
     is_special: true
 
@@ -246,12 +254,14 @@ scoring:
   title_correct: 1.0
   # 猜对歌手得分比例
   artist_correct: 0.5
-  # 猜对专辑额外加分比例
-  album_bonus: 0.3
+  # 猜对专辑额外加分
+  album_bonus: 3
   # 最快答题额外加分
   speed_bonus: 5
-  # 答题时间限制（秒）
-  time_limit: 30
+  # 快答时间阈值（秒）
+  speed_threshold: 10
+  # 答题时间限制（秒），不设置表示无限制
+  # time_limit: 30
 
 # 界面设置
 ui:
@@ -263,4 +273,6 @@ ui:
   show_lyrics: false
   # 显示实时排行榜
   show_leaderboard: true
+  # 背景图片路径（可选）
+  background_image: "./images/background.jpg"
 

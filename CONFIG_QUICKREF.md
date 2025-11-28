@@ -19,7 +19,13 @@ special_songs: []
 players:
   - id: 1
     name: "玩家1"
-    avatar: "./avatars/player1.jpg"
+    avatar: "./avatars/player1.jpg"  # 图片头像
+  - id: 2
+    name: "玩家2"
+    avatar: "小二"                   # 文字头像
+  - id: 3
+    name: "玩家3"
+    # avatar 省略，使用首字母
 
 songs:
   - id: 1
@@ -44,6 +50,7 @@ scoring:
   artist_correct: 0.5
   album_bonus: 0.3
   speed_bonus: 5
+  speed_threshold: 10  # 快答阈值
   time_limit: 30
 
 ui:
@@ -76,16 +83,20 @@ ui:
 ## 路径格式
 
 ```yaml
-# 相对路径（推荐）
-path: "./music/song.mp3"
-path: "../songs/song.mp3"
-
-# 绝对路径
-path: "/home/user/music/song.mp3"
-path: "C:/Music/song.mp3"
-
-# URL
-path: "https://example.com/music/song.mp3"
+songs:
+  - id: 1
+    # 相对路径（推荐）
+    path: "./music/song.mp3"
+  - id: 2
+    path: "../songs/song.mp3"
+  - id: 3
+    # 绝对路径
+    path: "/home/user/music/song.mp3"
+  - id: 4
+    path: "C:/Music/song.mp3"
+  - id: 5
+    # URL
+    path: "https://example.com/music/song.mp3"
 ```
 
 ## 常用配置组合
@@ -234,4 +245,3 @@ A: 上传时会显示详细的错误提示，指出具体问题
 详细文档请参考 `CONFIG_README.md`
 示例配置请参考 `config.example.yaml`
 测试配置请参考 `config.test.yaml`
-

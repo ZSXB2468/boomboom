@@ -75,18 +75,29 @@ special_songs:
 players:
   - id: 1
     name: "张三"
-    avatar: "./avatars/zhangsan.jpg"
+    avatar: "./avatars/zhangsan.jpg"  # 图片路径
     team: "红队"
   - id: 2
     name: "李四"
-    avatar: "https://example.com/avatars/lisi.jpg"
+    avatar: "https://example.com/avatars/lisi.jpg"  # URL 图片
     team: "红队"
+  - id: 3
+    name: "王五"
+    avatar: "王五"  # 文字头像
+    team: "蓝队"
+  - id: 4
+    name: "赵六"
+    # avatar 字段省略，将显示姓名首字母 "赵"
+    team: "蓝队"
 ```
 
 **字段说明：**
 - `id`: 玩家唯一标识符
 - `name`: 玩家姓名
-- `avatar`: 玩家头像路径（支持相对路径、绝对路径、URL）
+- `avatar`: 玩家头像（可选）
+  - **省略**：使用姓名的首字母作为头像
+  - **文字**：显示文字内容（最多显示前两个字符）
+  - **路径**：显示图片（支持相对路径、绝对路径、URL）
 - `team`: 队伍名称（可选，用于团队模式）
 
 ### 5. 歌曲列表 (songs)
@@ -102,6 +113,7 @@ songs:
     score: 10
     weight: 1.0
     duration: 233
+    chorus_time: 58
     tags: ["流行", "热门", "2017"]
     is_special: false
 ```
@@ -119,6 +131,7 @@ songs:
 - `score`: 歌曲基础分值
 - `weight`: 加权随机抽取时的权重值
 - `duration`: 歌曲时长（秒）
+- `chorus_time`: 副歌开始时间点（秒，可选）
 - `tags`: 标签列表（用于分类和搜索）
 - `is_special`: 是否为特殊歌曲（可选）
 
@@ -149,24 +162,26 @@ playback:
 scoring:
   title_correct: 1.0      # 猜对歌名得分比例
   artist_correct: 0.5     # 猜对歌手得分比例
-  album_bonus: 0.3        # 猜对专辑额外加分比例
+  album_bonus: 3          # 猜对专辑额外加分
   speed_bonus: 5          # 快速答题额外加分
-  time_limit: 30          # 答题时间限制（秒）
+  speed_threshold: 10     # 快答阈值（秒，可选）
+  # time_limit: 30        # 答题时间限制（秒，可选）
 ```
 
 **字段说明：**
 - `title_correct`: 猜对歌名时，获得歌曲基础分值的倍数
 - `artist_correct`: 猜对歌手时，额外获得歌曲基础分值的倍数
-- `album_bonus`: 猜对专辑时，额外获得歌曲基础分值的倍数
-- `speed_bonus`: 在前 5 秒内答对的额外加分
-- `time_limit`: 答题时间限制（超时视为放弃）
+- `album_bonus`: 猜对专辑时的固定额外加分
+- `speed_bonus`: 快速答题时的固定额外加分
+- `speed_threshold`: 快答阈值，在此时间内答对可获得快答加分（秒，可选）
+- `time_limit`: 答题时间限制（秒，可选，不设置表示无限制）
 
 **计分公式：**
 ```
 总分 = 歌曲分值 × title_correct 
      + 歌曲分值 × artist_correct (如果猜对歌手)
-     + 歌曲分值 × album_bonus (如果猜对专辑)
-     + speed_bonus (如果在5秒内答题)
+     + album_bonus (如果猜对专辑)
+     + speed_bonus (如果快速答题)
 ```
 
 ### 8. 界面设置 (ui)
@@ -177,6 +192,7 @@ ui:
   show_cover: true            # 是否显示专辑封面
   show_lyrics: false          # 是否显示歌词
   show_leaderboard: true      # 是否显示实时排行榜
+  background_image: "./images/background.jpg"  # 背景图片路径（可选）
 ```
 
 **字段说明：**
@@ -184,6 +200,7 @@ ui:
 - `show_cover`: 播放时是否显示专辑封面
 - `show_lyrics`: 是否显示歌词（需要歌词文件）
 - `show_leaderboard`: 是否实时显示玩家排行榜
+- `background_image`: 背景图片路径（可选，支持相对路径、绝对路径或URL）
 
 ## 路径说明
 

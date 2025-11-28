@@ -34,7 +34,7 @@ export interface SpecialSong {
 export interface Player {
   id: number;
   name: string;
-  avatar: string;
+  avatar?: string; // 可选：忽略时使用name首字母，文字时显示最多前两个字，路径时显示图片
   team?: string;
 }
 
@@ -48,6 +48,7 @@ export interface Song {
   score: number;
   weight: number;
   duration: number;
+  chorus_time?: number; // 副歌开始时间点（秒），可选
   tags: string[];
   is_special?: boolean;
 }
@@ -64,7 +65,8 @@ export interface ScoringRules {
   artist_correct: number;
   album_bonus: number;
   speed_bonus: number;
-  time_limit: number;
+  speed_threshold?: number; // 快答阈值（秒），可选
+  time_limit?: number; // 答题时限（秒），可选，不设置表示无限制
 }
 
 export interface UISettings {
@@ -72,6 +74,7 @@ export interface UISettings {
   show_cover: boolean;
   show_lyrics: boolean;
   show_leaderboard: boolean;
+  background_image?: string; // 背景图片路径，可选
 }
 
 // 游戏运行时状态

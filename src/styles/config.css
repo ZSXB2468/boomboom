@@ -1,0 +1,194 @@
+/* Config page styles */
+
+main {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.config-info-section {
+  margin-top: 30px;
+}
+
+.config-section-title {
+  margin-bottom: 20px;
+  color: #333;
+  font-size: 18px;
+}
+
+.config-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 30px;
+}
+
+.config-card-content {
+  padding: 16px;
+}
+
+.config-card-label {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.config-card-value {
+  font-size: 18px;
+  font-weight: 500;
+  color: #1976d2;
+}
+
+.config-score-value {
+  color: #4caf50;
+}
+
+.config-tables-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.config-table-card {
+  padding: 20px;
+}
+
+.player-info-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.player-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.player-avatar-text {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #1976d2;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.player-name {
+  font-weight: 500;
+  color: #1976d2;
+}
+
+.player-team-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  background: #e3f2fd;
+  color: #1976d2;
+  font-size: 12px;
+}
+
+.song-info-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.song-cover {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.song-title {
+  font-weight: 500;
+  color: #333;
+}
+
+.song-artist {
+  font-size: 12px;
+  color: #666;
+}
+
+.song-album {
+  color: #666;
+}
+
+.song-duration {
+  color: #666;
+}
+
+.song-score-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: #fff3e0;
+  color: #f57c00;
+  font-weight: 500;
+}
+
+.song-weight {
+  color: #666;
+}
+
+.song-tags-container {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.song-tag {
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: #f5f5f5;
+  color: #666;
+  font-size: 11px;
+}
+
+.special-song-id-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: #e8eaf6;
+  color: #3f51b5;
+  font-weight: 500;
+}
+
+.special-song-round {
+  color: #1976d2;
+  font-weight: 500;
+}
+
+.config-actions {
+  margin-top: 40px;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.config-primary-button {
+  padding: 12px 40px;
+  font-size: 16px;
+  background: #1976d2 !important;
+  color: white !important;
+}
+
+.config-secondary-button {
+  padding: 12px 24px;
+  font-size: 16px;
+  color: #f44336 !important;
+  border: 1px solid #f44336 !important;
+  background: transparent !important;
+}
+
+.empty-state {
+  color: #999;
+}
+
+.center-align {
+  text-align: center;
+}
