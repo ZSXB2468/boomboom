@@ -23,6 +23,9 @@ export class GameStateManager {
     this.gameState = initialState;
   }
 
+  /**
+   * 保存当前游戏状态到 localStorage
+   */
   public save() {
     saveGameState(this.gameState);
   }
@@ -52,10 +55,19 @@ export class GameStateManager {
   }
 
   /**
-   * 获取当前歌曲
+   * 获取当前歌曲（内部实现）
+   *
+   * @param nextSong 是否移除上一首已播放的歌曲（仅在 Manual 模式下有效）
+   *   - `false`: 仅查看当前歌曲，不修改歌曲池
+   *   - `true`: 从歌曲池中移除上一首歌曲，返回移除后的当前歌曲（即原来的下一首）
+   *
+   * - Fixed 模式：总是根据 `currentSongIndex` 返回对应歌曲
+   * - Manual 模式：歌曲池是动态的，`nextSong=true` 会修改 `songSequence`
+   *
    * @returns 当前歌曲，若无则返回 null
+   * @private
    */
-  public getCurrentSong(): Song | null {
+  private _getCurrentSong(nextSong: boolean): Song | null {
     const {gameConfig, songSequence, currentRound, currentSongIndex} = this.gameState;
 
     // 边界检查：确保 songSequence 不为空
@@ -78,6 +90,9 @@ export class GameStateManager {
       if (specialSong) {
         return specialSong;
       } else {
+        if(nextSong){
+          this.gameState.songSequence.shift();
+        }
         if (songs.length > 0) {
           return songs[0];
         }
@@ -87,106 +102,51 @@ export class GameStateManager {
   }
 
   /**
+   * 获取当前歌曲（公共接口）
+   *
+   * **注意**：此方法不会修改游戏状态，仅用于查询当前歌曲。
+   * 如需推进游戏进度，请使用 `nextSong()` 或 `lastSong()` 方法。
+   *
+   * @returns 当前歌曲，若无则返回 null
+   */
+  public getCurrentSong(): Song | null {
+    return this._getCurrentSong(false);
+  }
+
+  /**
    * 获取下一首歌曲
    * @returns 下一首歌曲，若无则返回 null
    */
   public nextSong(): Song | null {
-    const {gameConfig, songSequence, currentRound} = this.gameState;
-
     this.gameState.currentSongIndex++;
     this.gameState.songStartTimeStamp = Date.now(); // 重置时间戳
     this.save();
-    if (Array.isArray(songSequence[0])) {
-      // 二维数组模式：直接更新索引
-
-      return this.getCurrentSong();
-    } else {
-      // 一维数组模式：先更新索引，再检查新位置是否有特殊曲目
-      this.gameState.currentSongIndex++;
-
-      const specialSong = getSpecialSong(gameConfig, currentRound, this.gameState.currentSongIndex + 1);
-
-      if (specialSong) {
-        // 有特殊曲目，保持队列不变
-        return specialSong;
-      } else {
-        // 普通曲目，从队列中移除避免重复
-        this.gameState.songSequence.shift();
-        return this.getCurrentSong();
-      }
-    }
+    return this._getCurrentSong(true);
   }
 
   /**
-   * 手动结束一轮时获取最后一首歌并设置该轮结束
+   * 手动结束当前轮次，获取该轮最后一首歌
+   *
+   * 调用此方法表示"声明接下来的一首为该轮最后一首"
+   * - 会移除当前播放的歌曲（倒数第二首）
+   * - 返回该轮的最后一首歌曲（可能是 position=-1 的特殊歌曲）
+   *
    * @returns 该轮的最后一首歌曲，若无则返回 null
    */
   public lastSong(): Song | null {
-    const {gameConfig, songSequence, currentRound} = this.gameState;
+    const {songSequence} = this.gameState;
 
+    this.gameState.songStartTimeStamp = Date.now(); // 重置时间戳
     if (Array.isArray(songSequence[0])) {
       // 二维数组模式：每轮歌曲都预先生成
-      const songs = songSequence as Song[][];
-      const currentRoundSongs = songs[currentRound];
-
-      if (!currentRoundSongs || currentRoundSongs.length === 0) {
-        return null;
-      }
-
-      // 获取该轮的最后一首歌
-      const lastSongInRound = currentRoundSongs[currentRoundSongs.length - 1];
-
       // 设置该轮结束：将索引设置为该轮歌曲总数，表示该轮已完成
-      this.gameState.currentSongIndex = currentRoundSongs.length;
-      this.gameState.songStartTimeStamp = Date.now(); // 重置时间戳
-      this.save();
-
-      return lastSongInRound;
+      this.gameState.currentSongIndex = this.gameState.gameConfig.game.songs_per_round - 1;
     } else {
       // 一维数组模式：检查是否有指定为最后一首的特殊曲目
-      const songs = songSequence as Song[];
-      const specialSong = getSpecialSong(gameConfig, currentRound, -1);
-
-      if (specialSong) {
-        // 如果有指定为最后一首的特殊曲目，返回它
-        const lastSongInRound = specialSong;
-
-        // 手动结束该轮，设置为固定歌曲数或标记轮次结束
-        if (gameConfig.game.round_end_mode === 'fixed') {
-          this.gameState.currentSongIndex = gameConfig.game.songs_per_round;
-        } else {
-          // 对于手动模式，可以通过设置一个标记来表示轮次结束
-          this.gameState.currentSongIndex = -1; // 使用-1表示手动结束
-        }
-
-        this.gameState.songStartTimeStamp = Date.now(); // 重置时间戳
-        this.save();
-
-        return lastSongInRound;
-      } else {
-        // 如果没有特殊的最后一首歌，返回队列中的第一首作为最后播放的歌
-        if (songs.length > 0) {
-          const lastSongInRound = songs[0];
-
-          // 从队列中移除避免重复
-          this.gameState.songSequence = songs.slice(1);
-
-          // 手动结束该轮
-          if (gameConfig.game.round_end_mode === 'fixed') {
-            this.gameState.currentSongIndex = gameConfig.game.songs_per_round;
-          } else {
-            this.gameState.currentSongIndex = -1; // 手动结束
-          }
-
-          this.gameState.songStartTimeStamp = Date.now(); // 重置时间戳
-          this.save();
-
-          return lastSongInRound;
-        }
-      }
+      this.gameState.currentSongIndex = -2; // 使用-2表示手动结束
     }
-
-    return null;
+    this.save();
+    return this._getCurrentSong(true);
   }
 
   /**
@@ -194,8 +154,6 @@ export class GameStateManager {
    * @returns 下一轮的第一首歌曲，若游戏结束则返回 null
    */
   public nextRound(): Song | null {
-    const {songSequence} = this.gameState;
-
     // 检查是否还有下一轮
     if (this.isLastRound()) {
       return null;
@@ -207,20 +165,7 @@ export class GameStateManager {
     this.gameState.songStartTimeStamp = Date.now(); // 重置时间戳
     this.save();
 
-    if (Array.isArray(songSequence[0])) {
-      // 二维数组模式
-      const songs = songSequence as Song[][];
-      const currentRoundSongs = songs[this.gameState.currentRound];
-
-      if (currentRoundSongs && currentRoundSongs.length > 0) {
-        return currentRoundSongs[0];
-      }
-    } else {
-      // 一维数组模式：获取当前轮的第一首歌（不调用 nextSong 避免索引错位）
-      return this.getCurrentSong();
-    }
-
-    return null;
+    return this._getCurrentSong(true);
   }
 
   /**
@@ -228,7 +173,7 @@ export class GameStateManager {
    * @returns 如果是最后一首歌返回 true，否则返回 false
    */
   public isLastSong(): boolean {
-    const {gameConfig, songSequence, currentRound, currentSongIndex} = this.gameState;
+    const {songSequence, currentRound, currentSongIndex} = this.gameState;
 
     if (Array.isArray(songSequence[0])) {
       // 二维数组模式
@@ -240,14 +185,8 @@ export class GameStateManager {
       // 检查是否是当前轮的最后一首
       return currentSongIndex >= currentRoundSongs.length - 1;
     } else {
-      // 一维数组模式
-      if (gameConfig.game.round_end_mode === 'fixed') {
-        // 固定歌曲数模式
-        return currentSongIndex >= gameConfig.game.songs_per_round - 1;
-      } else {
-        // 手动结束模式，检查是否已经手动结束（currentSongIndex为-1）
-        return currentSongIndex === -1;
-      }
+      // 一维数组模式，即手动结束模式，检查是否已经手动结束（currentSongIndex为-2）
+      return currentSongIndex === -2 || (songSequence as Song[]).length === 0;
     }
   }
 
@@ -288,8 +227,8 @@ export class GameStateManager {
       this.gameState.gameConfig.scoring
     );
 
-    // 累加分数而非覆盖
-    this.gameState.playerScores[player.id] = (this.gameState.playerScores[player.id]) + scoreThisRound;
+    // 累加分数
+    this.gameState.playerScores[player.id] = (this.gameState.playerScores[player.id] || 0) + scoreThisRound;
 
     // 保存状态
     this.save();
