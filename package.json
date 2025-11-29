@@ -12,6 +12,7 @@
     "@solidjs/router": "^0.15.0",
     "@solidjs/start": "^1.1.0",
     "@types/js-yaml": "^4.0.9",
+    "ajv": "^8.17.1",
     "js-yaml": "^4.1.1",
     "mdui": "^2.1.4",
     "solid-js": "^1.9.5",

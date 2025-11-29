@@ -2,7 +2,16 @@
 // Configuration parser and validator
 
 import yaml from 'js-yaml';
+import Ajv from 'ajv';
 import type {GameConfig, Song, SelectionRules, ScoringRules} from '~/types/config';
+import configSchemaYaml from './config.schema.yaml?raw';
+
+// 初始化 Ajv 验证器
+const ajv = new Ajv({ allErrors: true, verbose: true });
+
+// 加载 schema
+const schema = yaml.load(configSchemaYaml) as Record<string, any>;
+const validateSchema = ajv.compile(schema);
 
 /**
  * 解析 YAML 配置文件
@@ -24,72 +33,57 @@ export function parseConfig(content: string): GameConfig {
  * @param config 配置对象
  */
 export function validateConfig(config: GameConfig): void {
-  // 验证基本结构
-  if (!config.game || !config.songs || !config.players) {
-    throw new Error('配置文件缺少必要字段: game, songs, players');
+  // 使用 JSON Schema 进行基础结构验证
+  const valid = validateSchema(config);
+  if (!valid) {
+    const errors = validateSchema.errors || [];
+    const errorMessages = errors.map(err => {
+      const path = err.instancePath || err.schemaPath;
+      return `${path}: ${err.message}`;
+    }).join('; ');
+    throw new Error(`配置文件验证失败: ${errorMessages}`);
   }
 
-  // 验证游戏设置
-  if (config.game.rounds < 1) {
-    throw new Error('游戏轮数必须大于0');
-  }
+  // 以下是 schema 无法验证的运行时检查（如唯一性、引用完整性等）
 
-  if (config.game.round_end_mode === 'fixed' && config.game.songs_per_round < 1) {
-    throw new Error('每轮歌曲数必须大于0');
-  }
-
-  // 验证歌曲列表
-  if (config.songs.length === 0) {
-    throw new Error('歌曲列表不能为空');
-  }
-
+  // 验证歌曲ID唯一性
   const songIds = new Set<number>();
   for (const song of config.songs) {
     if (songIds.has(song.id)) {
       throw new Error(`重复的歌曲ID: ${song.id}`);
     }
     songIds.add(song.id);
-
-    if (!song.title || !song.artist || !song.album || !song.path) {
-      throw new Error(`歌曲ID ${song.id} 缺少必要字段`);
-    }
   }
 
-  // 验证特殊曲目设置
+  // 验证特殊曲目引用的歌曲ID存在性
   if (config.special_songs) {
     for (const special of config.special_songs) {
       if (!songIds.has(special.song_id)) {
         throw new Error(`特殊曲目引用了不存在的歌曲ID: ${special.song_id}`);
       }
 
+      // 验证特殊曲目的轮次范围
       if (special.round < 1 || special.round > config.game.rounds) {
         throw new Error(`特殊曲目的轮次 ${special.round} 超出游戏总轮数（有效范围：1-${config.game.rounds}）`);
       }
 
+      // 验证特殊曲目的位置范围（仅在 fixed 模式下）
       if (config.game.round_end_mode === 'fixed') {
         if (special.position !== -1 &&
           (special.position < 1 || special.position > config.game.songs_per_round)) {
-          throw new Error(`特殊曲目的位置 ${special.position} 超出每轮歌曲数`);
+          throw new Error(`特殊曲目的位置 ${special.position} 超出每轮歌曲数（有效范围：1-${config.game.songs_per_round} 或 -1）`);
         }
       }
     }
   }
 
-  // 验证玩家列表
-  if (config.players.length === 0) {
-    throw new Error('玩家列表不能为空');
-  }
-
+  // 验证玩家ID唯一性
   const playerIds = new Set<number>();
   for (const player of config.players) {
     if (playerIds.has(player.id)) {
       throw new Error(`重复的玩家ID: ${player.id}`);
     }
     playerIds.add(player.id);
-
-    if (!player.name) {
-      throw new Error(`玩家ID ${player.id} 缺少名称`);
-    }
   }
 }
 

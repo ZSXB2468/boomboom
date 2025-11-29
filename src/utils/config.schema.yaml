@@ -1,0 +1,268 @@
+# YAML Schema for Game Configuration
+# 猜歌游戏配置文件的 YAML Schema
+
+$schema: http://json-schema.org/draft-07/schema#
+title: Game Configuration Schema
+description: Configuration schema for the music guessing game (猜歌游戏配置文件)
+type: object
+required:
+  - game
+  - selection_rules
+  - players
+  - songs
+  - playback
+  - scoring
+  - ui
+
+properties:
+  game:
+    type: object
+    description: 游戏基本设置 - Game settings
+    required:
+      - name
+      - rounds
+      - round_end_mode
+    properties:
+      name:
+        type: string
+        minLength: 1
+        description: 游戏名称 - Game name (must not be empty)
+      rounds:
+        type: integer
+        minimum: 1
+        description: 游戏总轮数 - Total number of rounds (must be at least 1)
+      round_end_mode:
+        type: string
+        enum:
+          - fixed
+          - manual
+        description: "每轮结束方式 - How each round ends: 'fixed' (固定歌曲数后自动结束 - fixed number of songs) or 'manual' (手动控制结束 - manually controlled)"
+      songs_per_round:
+        type: integer
+        minimum: 1
+        description: 每轮歌曲数量 - Number of songs per round (required and must be >= 1 when round_end_mode is 'fixed', ignored in 'manual' mode)
+    allOf:
+      - if:
+          properties:
+            round_end_mode:
+              const: fixed
+        then:
+          required:
+            - songs_per_round
+
+  selection_rules:
+    type: object
+    description: 歌曲选择规则 - Song selection rules
+    required:
+      - mode
+      - allow_duplicates
+    properties:
+      mode:
+        type: string
+        enum:
+          - random
+          - sequential
+          - weighted
+        description: "歌曲抽取模式 - Song selection mode: 'random' (完全随机 - completely random), 'sequential' (按顺序 - sequential order), 'weighted' (加权随机，使用song.weight - weighted random using song.weight)"
+      allow_duplicates:
+        type: boolean
+        description: "是否允许跨轮重复 - Whether to allow duplicate songs across rounds. false: 每首歌选中后从池中移除 (remove after selection), true: 歌曲可以重复出现 (songs can repeat)"
+
+  special_songs:
+    type: array
+    description: 特殊曲目设置 - Special songs with fixed positions in specific rounds
+    default: []
+    items:
+      type: object
+      required:
+        - song_id
+        - round
+        - position
+      properties:
+        song_id:
+          type: integer
+          description: 歌曲ID - ID of the song (must exist in songs list, validated at runtime)
+        round:
+          type: integer
+          minimum: 1
+          description: 出现轮次 - Round number (1-based, 1 means first round, must be within 1 to game.rounds, validated at runtime)
+        position:
+          type: integer
+          description: 位置 - Position in the round (1-based, -1 for last position. In 'fixed' mode, must be within 1 to songs_per_round or -1, validated at runtime)
+
+  players:
+    type: array
+    minItems: 1
+    description: 玩家列表 - List of players (must have at least 1 player, player IDs must be unique - validated at runtime)
+    items:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+          description: 玩家唯一标识 - Unique player ID (must be unique across all players, validated at runtime)
+        name:
+          type: string
+          minLength: 1
+          description: 玩家姓名 - Player name (must not be empty)
+        avatar:
+          type: string
+          description: "玩家头像 - Player avatar (optional). If omitted: uses first letter of name; If text (without '/' or 'http'): displays up to 2 characters; If path (with '/' or starts with 'http'): displays image from URL/relative/absolute path"
+        team:
+          type: string
+          description: 队伍名称 - Team name (optional, used for team mode)
+
+  songs:
+    type: array
+    minItems: 1
+    description: 歌曲列表 - List of songs (must have at least 1 song, song IDs must be unique - validated at runtime)
+    items:
+      type: object
+      required:
+        - id
+        - title
+        - artist
+        - album
+        - path
+        - cover
+        - score
+        - weight
+        - duration
+        - tags
+      properties:
+        id:
+          type: integer
+          description: 歌曲唯一标识 - Unique song ID (must be unique across all songs, validated at runtime)
+        title:
+          type: string
+          minLength: 1
+          description: 歌曲名称 - Song title (must not be empty)
+        artist:
+          type: string
+          minLength: 1
+          description: 歌手/艺术家名称 - Artist name (must not be empty)
+        album:
+          type: string
+          minLength: 1
+          description: 专辑名称 - Album name (must not be empty)
+        path:
+          type: string
+          minLength: 1
+          description: "歌曲文件路径 - Path to song file (must not be empty, supports: relative path './music/song.mp3', absolute path '/path/to/song.mp3', or URL 'https://example.com/song.mp3')"
+        cover:
+          type: string
+          minLength: 1
+          description: 专辑封面路径 - Path to album cover image (must not be empty, supports same path formats as 'path')
+        score:
+          type: number
+          minimum: 0
+          description: 基础分值 - Base score for this song (must be >= 0, used in scoring calculation)
+        weight:
+          type: number
+          minimum: 0
+          exclusiveMinimum: 0
+          description: 权重值 - Weight for weighted random selection (must be > 0, used when selection_rules.mode is 'weighted')
+        duration:
+          type: integer
+          minimum: 1
+          description: 歌曲时长 - Song duration in seconds (must be >= 1)
+        chorus_time:
+          type: integer
+          minimum: 0
+          description: 副歌开始时间点 - Chorus start time in seconds (optional, must be >= 0 and should be < duration)
+        tags:
+          type: array
+          items:
+            type: string
+          description: 标签列表 - Tags for categorization and searching (can be empty array)
+        is_special:
+          type: boolean
+          description: 特殊标记 - Whether this is a special song (optional, for marking important songs)
+
+  playback:
+    type: object
+    description: 播放设置 - Playback settings
+    required:
+      - clip_duration
+      - start_position
+      - fade_duration
+      - volume
+    properties:
+      clip_duration:
+        type: integer
+        description: 播放时长 - Playback duration in seconds (-1 for full song, >=1 for specified duration in seconds)
+      start_position:
+        type: integer
+        description: 开始位置 - Start position in seconds (-1 for random position, 0 to start from beginning, >=1 for specified position in seconds)
+      fade_duration:
+        type: number
+        minimum: 0
+        description: 淡入淡出时长 - Fade in/out duration in seconds (must be >= 0)
+      volume:
+        type: number
+        minimum: 0
+        maximum: 1
+        description: 音量 - Playback volume (0.0 for mute, 1.0 for maximum, must be between 0.0 and 1.0)
+
+  scoring:
+    type: object
+    description: "评分规则 - Scoring rules. Formula: round(song.score × title_correct + song.score × artist_correct + album_bonus + speed_bonus)"
+    required:
+      - title_correct
+      - artist_correct
+      - album_bonus
+      - speed_bonus
+    properties:
+      title_correct:
+        type: number
+        minimum: 0
+        description: 猜对歌名的分值倍数 - Score multiplier for correct title (must be >= 0, multiplied by song.score)
+      artist_correct:
+        type: number
+        minimum: 0
+        description: 猜对歌手的分值倍数 - Score multiplier for correct artist (must be >= 0, multiplied by song.score)
+      album_bonus:
+        type: number
+        minimum: 0
+        description: 猜对专辑的固定加分 - Fixed bonus points for correct album (must be >= 0, added directly to score)
+      speed_bonus:
+        type: number
+        minimum: 0
+        description: 快速答题的固定加分 - Fixed bonus points for fast answer (must be >= 0, added when answer time <= speed_threshold)
+      speed_threshold:
+        type: integer
+        minimum: 1
+        description: 快答阈值 - Time threshold for speed bonus in seconds (optional, must be >= 1 if specified, speed_bonus is awarded if answer time <= this value)
+      time_limit:
+        type: integer
+        minimum: 1
+        description: 答题时限 - Time limit for answering in seconds (optional, must be >= 1 if specified, omit for unlimited time)
+
+  ui:
+    type: object
+    description: 界面设置 - UI settings
+    required:
+      - theme_color
+      - show_cover
+      - show_lyrics
+      - show_leaderboard
+    properties:
+      theme_color:
+        type: string
+        pattern: "^#[0-9A-Fa-f]{6}$"
+        description: 主题颜色 - Theme color in hex format (must be #RRGGBB format, e.g., #FF6B6B)
+      show_cover:
+        type: boolean
+        description: 是否显示专辑封面 - Whether to show album cover during playback
+      show_lyrics:
+        type: boolean
+        description: 是否显示歌词 - Whether to show lyrics (requires lyrics file)
+      show_leaderboard:
+        type: boolean
+        description: 是否显示实时排行榜 - Whether to show real-time leaderboard
+      background_image:
+        type: string
+        description: 背景图片路径 - Path to background image (optional, supports relative/absolute path or URL)
+
