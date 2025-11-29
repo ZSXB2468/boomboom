@@ -2,7 +2,7 @@
 // Configuration parser and validator
 
 import yaml from 'js-yaml';
-import type { GameConfig, Song, SelectionRules } from '~/types/config';
+import type {GameConfig, Song, SelectionRules, ScoringRules} from '~/types/config';
 
 /**
  * 解析 YAML 配置文件
@@ -50,7 +50,7 @@ export function validateConfig(config: GameConfig): void {
     }
     songIds.add(song.id);
 
-    if (!song.title || !song.artist || !song.path) {
+    if (!song.title || !song.artist || !song.album || !song.path) {
       throw new Error(`歌曲ID ${song.id} 缺少必要字段`);
     }
   }
@@ -63,12 +63,12 @@ export function validateConfig(config: GameConfig): void {
       }
 
       if (special.round < 1 || special.round > config.game.rounds) {
-        throw new Error(`特殊曲目的轮次 ${special.round} 超出游戏总轮数`);
+        throw new Error(`特殊曲目的轮次 ${special.round} 超出游戏总轮数（有效范围：1-${config.game.rounds}）`);
       }
 
       if (config.game.round_end_mode === 'fixed') {
         if (special.position !== -1 &&
-            (special.position < 1 || special.position > config.game.songs_per_round)) {
+          (special.position < 1 || special.position > config.game.songs_per_round)) {
           throw new Error(`特殊曲目的位置 ${special.position} 超出每轮歌曲数`);
         }
       }
@@ -115,59 +115,84 @@ export function resolvePath(path: string, configBasePath: string): string {
 }
 
 /**
+ * 检查指定位置是否为特殊歌曲
+ * @param config 游戏配置
+ * @param round 轮次（从 0 开始，0 表示第一轮）
+ * @param position 位置（从1开始），-1表示最后一首
+ * @returns 如果是特殊歌曲，返回对应的Song对象，否则返回null
+ */
+export function getSpecialSong(config: GameConfig, round: number, position: number): Song | null {
+  // 获取本轮的特殊曲目
+  // 注意：配置文件中 round 从 1 开始，需要转换为 0-based
+  const specialInThisRound = config.special_songs?.filter(song => song.round === round + 1) || [];
+
+  // 检查是否有特殊曲目在指定位置
+  const specialAtPosition = specialInThisRound.find(song => song.position === position);
+
+  if (specialAtPosition) {
+    return config.songs.find(song => song.id === specialAtPosition.song_id) || null;
+  }
+
+  return null;
+}
+
+/**
  * 根据选择规则生成歌曲序列
  * @param config 游戏配置
- * @returns 每轮的歌曲ID数组
+ * @returns fixed 模式返回 Song[][]（预生成所有轮次），manual 模式返回 Song[]（歌曲池）
  */
-export function generateSongSequence(config: GameConfig): number[][] {
-  const { game, selection_rules, special_songs, songs } = config;
-  const rounds: number[][] = [];
+export function generateSongSequence(config: GameConfig): Song[][] | Song[] {
+  const {game, selection_rules, special_songs, songs} = config;
 
-  // 创建可用歌曲池
+  // 创建可用歌曲池（移除所有特殊歌曲）
   let availableSongs = [...songs];
+  for (const special of special_songs) {
+    availableSongs = availableSongs.filter(song => song.id !== special.song_id);
+  }
 
-  for (let round = 1; round <= game.rounds; round++) {
-    const roundSongs: number[] = [];
-    const songsNeeded = game.round_end_mode === 'fixed' ? game.songs_per_round : 10;
+  if (game.round_end_mode === 'manual') {
+    // manual 模式：返回一维数组（歌曲池）
+    // 特殊歌曲会在运行时通过 getSpecialSong 动态获取
+    return availableSongs;
+  } else {
+    // fixed 模式：预生成所有轮次的歌曲序列（二维数组）
+    const rounds: Song[][] = [];
 
-    // 获取本轮的特殊曲目
-    const specialInThisRound = special_songs?.filter(s => s.round === round) || [];
+    for (let round = 0; round < game.rounds; round++) {
+      const roundSongs: Song[] = [];
+      const songsNeeded = game.songs_per_round;
 
-    // 生成本轮歌曲
-    for (let i = 0; i < songsNeeded; i++) {
-      // 检查是否有特殊曲目需要在这个位置
-      const specialAtPosition = specialInThisRound.find(
-        s => s.position === i + 1 || (s.position === -1 && i === songsNeeded - 1)
-      );
+      // 生成本轮歌曲
+      for (let i = 0; i < songsNeeded; i++) {
+        // 检查是否有特殊曲目需要在这个位置
+        const position = i + 1;
+        const specialSong = getSpecialSong(config, round, position) ||
+          (i === songsNeeded - 1 ? getSpecialSong(config, round, -1) : null);
 
-      if (specialAtPosition) {
-        roundSongs.push(specialAtPosition.song_id);
-        // 从可用歌曲池中移除
-        if (!selection_rules.allow_duplicates) {
-          availableSongs = availableSongs.filter(s => s.id !== specialAtPosition.song_id);
-        }
-      } else {
-        // 按照选择规则选择歌曲
-        const selectedSong = selectSong(availableSongs, selection_rules);
-        if (selectedSong) {
-          roundSongs.push(selectedSong.id);
-          // 从可用歌曲池中移除
-          if (!selection_rules.allow_duplicates) {
-            availableSongs = availableSongs.filter(s => s.id !== selectedSong.id);
+        if (specialSong) {
+          // 使用特殊歌曲
+          roundSongs.push(specialSong);
+        } else {
+          // 按照选择规则选择歌曲
+          const selectedSong = selectSong(availableSongs, selection_rules);
+          if (selectedSong) {
+            roundSongs.push(selectedSong);
+
+            // 不允许重复：每选一首歌就从池子移除（跨轮次不重复）
+            // 允许重复：不从池子移除，池子始终保持不变
+            if (!selection_rules.allow_duplicates) {
+              availableSongs = availableSongs.filter(s => s.id !== selectedSong.id);
+            }
           }
         }
       }
+
+      rounds.push(roundSongs);
+      // 注意：允许重复时不需要重置池子，因为从未移除过歌曲
     }
 
-    rounds.push(roundSongs);
-
-    // 如果允许重复，重置歌曲池
-    if (selection_rules.allow_duplicates) {
-      availableSongs = [...songs];
-    }
+    return rounds;
   }
-
-  return rounds;
 }
 
 /**
@@ -187,7 +212,7 @@ function selectSong(songs: Song[], rules: SelectionRules): Song | null {
       return songs[Math.floor(Math.random() * songs.length)];
 
     case 'weighted':
-      return selectWeightedSong(songs, rules.weight_method);
+      return selectWeightedSong(songs);
 
     default:
       return songs[0];
@@ -197,24 +222,11 @@ function selectSong(songs: Song[], rules: SelectionRules): Song | null {
 /**
  * 加权随机选择歌曲
  * @param songs 可用歌曲列表
- * @param weightMethod 权重计算方法
  * @returns 选中的歌曲
  */
-function selectWeightedSong(songs: Song[], weightMethod: string): Song {
+function selectWeightedSong(songs: Song[]): Song {
   let weights: number[];
-
-  switch (weightMethod) {
-    case 'score':
-      weights = songs.map(s => s.score);
-      break;
-    case 'custom':
-      weights = songs.map(s => s.weight);
-      break;
-    case 'equal':
-    default:
-      weights = songs.map(() => 1);
-      break;
-  }
+  weights = songs.map(s => s.weight);
 
   const totalWeight = weights.reduce((sum, w) => sum + w, 0);
   let random = Math.random() * totalWeight;
@@ -245,25 +257,28 @@ export function calculateScore(
   albumCorrect: boolean,
   answerTime: number,
   song: Song,
-  scoring: GameConfig['scoring']
+  scoring: ScoringRules
 ): number {
-  if (!titleCorrect) return 0;
+  let score = 0;
 
-  let score = song.score * scoring.title_correct;
+  if (titleCorrect) {
+    score += song.score * scoring.title_correct;
+  }
 
   if (artistCorrect) {
     score += song.score * scoring.artist_correct;
   }
 
   if (albumCorrect) {
-    score += song.score * scoring.album_bonus;
+    score += scoring.album_bonus;
   }
 
-  // 速度加成（前5秒内回答）
-  if (answerTime <= 5) {
-    score += scoring.speed_bonus;
+  if (scoring.speed_threshold) {
+    // 速度加成（前5秒内回答）
+    if (answerTime <= scoring.speed_threshold) {
+      score += scoring.speed_bonus;
+    }
   }
 
   return Math.round(score);
 }
-

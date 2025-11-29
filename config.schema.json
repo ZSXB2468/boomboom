@@ -32,7 +32,7 @@
     },
     "selection_rules": {
       "type": "object",
-      "required": ["mode", "allow_duplicates", "weight_method"],
+      "required": ["mode", "allow_duplicates"],
       "properties": {
         "mode": {
           "type": "string",
@@ -42,11 +42,6 @@
         "allow_duplicates": {
           "type": "boolean",
           "description": "Whether to allow duplicate songs across rounds"
-        },
-        "weight_method": {
-          "type": "string",
-          "enum": ["score", "custom", "equal"],
-          "description": "Weight calculation method for weighted mode"
         }
       }
     },

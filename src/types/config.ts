@@ -22,13 +22,12 @@ export interface GameSettings {
 export interface SelectionRules {
   mode: 'random' | 'sequential' | 'weighted';
   allow_duplicates: boolean;
-  weight_method: 'score' | 'custom' | 'equal';
 }
 
 export interface SpecialSong {
   song_id: number;
-  round: number;
-  position: number; // -1 表示最后一首
+  round: number; // 轮次，配置文件中从 1 开始（1 表示第一轮），程序内部使用时会转换为 0-based
+  position: number; // 位置，从 1 开始（1 表示第一首），-1 表示最后一首
 }
 
 export interface Player {
@@ -76,13 +75,3 @@ export interface UISettings {
   show_leaderboard: boolean;
   background_image?: string; // 背景图片路径，可选
 }
-
-// 游戏运行时状态
-export interface GameState {
-  currentRound: number;
-  currentSongIndex: number;
-  scores: Map<number, number>; // player_id -> score
-  playedSongs: number[]; // song ids
-  roundSongs: number[][]; // songs for each round
-}
-

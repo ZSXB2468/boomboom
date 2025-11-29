@@ -5,7 +5,7 @@ import { snackbar } from 'mdui/functions/snackbar.js';
 import { dialog } from 'mdui/functions/dialog.js';
 import 'mdui/components/card.js';
 import 'mdui/components/button.js';
-import { parseConfig, generateSongSequence } from "~/utils/configParser";
+import {parseConfig, generateSongSequence} from "~/utils/configParser";
 import { createSignal, onMount } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import { detectValidGameState, saveGameState, clearGameState } from "~/utils/gameStateManager";
@@ -39,14 +39,15 @@ export default function Config() {
     if (!config) return;
 
     try {
+
       // 生成歌曲序列
       const songSequence = generateSongSequence(config);
 
-      // 使用新的工具函数保存游戏状态
+      // 保存游戏状态
       saveGameState({
         gameConfig: config,
-        songSequence: songSequence,
-        currentRound: 1,
+        songSequence: songSequence, // 现在是 Song[][]
+        currentRound: 0, // 内部使用 0-based 索引
         currentSongIndex: 0,
         playerScores: config.players.reduce((scores, player) => {
           scores[player.id] = 0;

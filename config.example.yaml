@@ -20,18 +20,15 @@ selection_rules:
   mode: "weighted"
   # 是否允许重复抽取同一首歌
   allow_duplicates: false
-  # 当 mode 为 "weighted" 时，权重计算方式
-  # "score" - 基于分值, "custom" - 使用歌曲自定义权重, "equal" - 平等权重
-  weight_method: "custom"
 
 # 特殊曲目设置
 special_songs:
   # 固定出现的特殊曲目
   - song_id: 5  # 歌曲ID（对应songs列表中的序号）
-    round: 2    # 出现在第几轮（从1开始）
+    round: 2    # 出现在第几轮（从1开始，1表示第一轮，2表示第二轮）
     position: 3 # 出现在该轮的第几首（从1开始，-1表示最后一首）
   - song_id: 10
-    round: 3
+    round: 3    # 第三轮
     position: -1  # 最后一首
 
 # 玩家列表
@@ -275,4 +272,3 @@ ui:
   show_leaderboard: true
   # 背景图片路径（可选）
   background_image: "./images/background.jpg"
-
