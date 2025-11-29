@@ -21,7 +21,6 @@ export interface GameSettings {
 
 export interface SelectionRules {
   mode: 'random' | 'sequential' | 'weighted';
-  allow_duplicates: boolean;
 }
 
 export interface SpecialSong {

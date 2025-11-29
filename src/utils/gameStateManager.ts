@@ -93,11 +93,11 @@ export class GameStateManager {
   public nextSong(): Song | null {
     const {gameConfig, songSequence, currentRound} = this.gameState;
 
+    this.gameState.currentSongIndex++;
+    this.gameState.songStartTimeStamp = Date.now(); // 重置时间戳
+    this.save();
     if (Array.isArray(songSequence[0])) {
       // 二维数组模式：直接更新索引
-      this.gameState.currentSongIndex++;
-      this.gameState.songStartTimeStamp = Date.now(); // 重置时间戳
-      this.save();
 
       return this.getCurrentSong();
     } else {
@@ -108,19 +108,10 @@ export class GameStateManager {
 
       if (specialSong) {
         // 有特殊曲目，保持队列不变
-        this.gameState.songStartTimeStamp = Date.now(); // 重置时间戳
-        this.save();
-
-        return this.getCurrentSong();
+        return specialSong;
       } else {
-
-        this.gameState.songStartTimeStamp = Date.now(); // 重置时间戳
-        this.save();
-
-        // 普通曲目，需要从队列中移除
-        if (!gameConfig.selection_rules.allow_duplicates) {
-          this.gameState.songSequence.shift();
-        }
+        // 普通曲目，从队列中移除避免重复
+        this.gameState.songSequence.shift();
         return this.getCurrentSong();
       }
     }
@@ -177,10 +168,8 @@ export class GameStateManager {
         if (songs.length > 0) {
           const lastSongInRound = songs[0];
 
-          // 从队列中移除
-          if (!gameConfig.selection_rules.allow_duplicates) {
-            this.gameState.songSequence = songs.slice(1);
-          }
+          // 从队列中移除避免重复
+          this.gameState.songSequence = songs.slice(1);
 
           // 手动结束该轮
           if (gameConfig.game.round_end_mode === 'fixed') {

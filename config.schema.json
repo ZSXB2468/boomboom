@@ -49,16 +49,12 @@
     "selection_rules": {
       "type": "object",
       "description": "歌曲选择规则 - Song selection rules",
-      "required": ["mode", "allow_duplicates"],
+      "required": ["mode"],
       "properties": {
         "mode": {
           "type": "string",
           "enum": ["random", "sequential", "weighted"],
           "description": "歌曲抽取模式 - Song selection mode: 'random' (完全随机 - completely random), 'sequential' (按顺序 - sequential order), 'weighted' (加权随机，使用song.weight - weighted random using song.weight)"
-        },
-        "allow_duplicates": {
-          "type": "boolean",
-          "description": "是否允许跨轮重复 - Whether to allow duplicate songs across rounds. false: 每首歌选中后从池中移除 (remove after selection), true: 歌曲可以重复出现 (songs can repeat)"
         }
       }
     },

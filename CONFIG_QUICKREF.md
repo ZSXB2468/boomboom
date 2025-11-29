@@ -11,8 +11,6 @@ game:
 
 selection_rules:
   mode: "random"
-  allow_duplicates: false
-  weight_method: "equal"
 
 special_songs: []
 
@@ -105,16 +103,12 @@ songs:
 ```yaml
 selection_rules:
   mode: "random"
-  allow_duplicates: false
-  weight_method: "equal"
 ```
 
 ### 2. 加权模式（难歌少出现）
 ```yaml
 selection_rules:
   mode: "weighted"
-  allow_duplicates: false
-  weight_method: "custom"
 
 # 在歌曲中设置较低的 weight
 songs:
@@ -128,17 +122,9 @@ songs:
 ```yaml
 selection_rules:
   mode: "sequential"
-  allow_duplicates: false
-  weight_method: "equal"
 ```
 
-### 4. 允许重复（歌曲少时）
-```yaml
-selection_rules:
-  mode: "random"
-  allow_duplicates: true
-  weight_method: "equal"
-```
+**注意：** 所有模式下，歌曲播放后都会自动从歌曲池中移除，不会重复播放。
 
 ## 评分计算示例
 
@@ -210,7 +196,7 @@ special_songs:
 ## 常见问题
 
 ### Q: 歌曲数量不够怎么办？
-A: 设置 `allow_duplicates: true` 允许重复，或减少轮数/每轮歌曲数
+A: 增加歌曲列表，或减少轮数/每轮歌曲数。确保歌曲总数 ≥ 轮数 × 每轮歌曲数
 
 ### Q: 如何让难歌少出现？
 A: 使用 `weighted` 模式，给难歌设置较低的 `weight` 值
@@ -233,7 +219,7 @@ A: 上传时会显示详细的错误提示，指出具体问题
 
 - [ ] 所有歌曲 ID 唯一
 - [ ] 所有玩家 ID 唯一
-- [ ] 歌曲数量足够（如果不允许重复）
+- [ ] 歌曲数量足够（歌曲总数 ≥ 需要的歌曲数）
 - [ ] 特殊曲目的 song_id 存在
 - [ ] 特殊曲目的位置合理
 - [ ] 文件路径正确且文件存在

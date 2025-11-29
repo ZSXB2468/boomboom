@@ -208,10 +208,6 @@ export default function Config() {
               </div>
             </mdui-card>
             <mdui-card class="config-card-content">
-              <div class="config-card-label">允许重复</div>
-              <div class="config-card-value">{gameConfig()!.selection_rules.allow_duplicates ? '是' : '否'}</div>
-            </mdui-card>
-            <mdui-card class="config-card-content">
               <div class="config-card-label">猜对歌名</div>
               <div class="config-card-value config-score-value">{(gameConfig()!.scoring.title_correct * 100).toFixed(0)}% 基础分</div>
             </mdui-card>

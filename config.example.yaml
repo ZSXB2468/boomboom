@@ -18,8 +18,6 @@ game:
 selection_rules:
   # 抽取模式: "random" (随机), "sequential" (顺序), "weighted" (加权随机)
   mode: "weighted"
-  # 是否允许重复抽取同一首歌
-  allow_duplicates: false
 
 # 特殊曲目设置
 special_songs:

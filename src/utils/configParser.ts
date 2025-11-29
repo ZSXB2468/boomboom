@@ -171,18 +171,13 @@ export function generateSongSequence(config: GameConfig): Song[][] | Song[] {
           const selectedSong = selectSong(availableSongs, selection_rules);
           if (selectedSong) {
             roundSongs.push(selectedSong);
-
-            // 不允许重复：每选一首歌就从池子移除（跨轮次不重复）
-            // 允许重复：不从池子移除，池子始终保持不变
-            if (!selection_rules.allow_duplicates) {
-              availableSongs = availableSongs.filter(s => s.id !== selectedSong.id);
-            }
+            // 每选一首歌就从池子移除，避免重复
+            availableSongs = availableSongs.filter(s => s.id !== selectedSong.id);
           }
         }
       }
 
       rounds.push(roundSongs);
-      // 注意：允许重复时不需要重置池子，因为从未移除过歌曲
     }
 
     return rounds;

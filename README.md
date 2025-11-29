@@ -89,8 +89,6 @@ game:
 
 selection_rules:
   mode: "random"
-  allow_duplicates: false
-  weight_method: "equal"
 
 special_songs: []
 

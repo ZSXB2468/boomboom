@@ -33,8 +33,6 @@ game:
 ```yaml
 selection_rules:
   mode: "weighted"               # 抽取模式
-  allow_duplicates: false        # 是否允许重复抽取
-  weight_method: "custom"        # 权重计算方式
 ```
 
 **字段说明：**
@@ -42,11 +40,8 @@ selection_rules:
   - `random`: 完全随机抽取
   - `sequential`: 按歌曲列表顺序抽取
   - `weighted`: 加权随机抽取（根据权重值）
-- `allow_duplicates`: 是否允许在不同轮次中重复播放同一首歌
-- `weight_method`: 权重计算方式（当 mode 为 "weighted" 时使用）
-  - `score`: 基于歌曲分值作为权重
-  - `custom`: 使用歌曲的自定义权重值
-  - `equal`: 所有歌曲权重相等
+
+**注意：** 游戏中歌曲不会重复播放，每首歌播放后会自动从歌曲池中移除。
 
 ### 3. 特殊曲目设置 (special_songs)
 
@@ -230,8 +225,6 @@ game:
 
 selection_rules:
   mode: "random"
-  allow_duplicates: false
-  weight_method: "equal"
 
 special_songs: []
 
@@ -258,8 +251,6 @@ game:
 
 selection_rules:
   mode: "weighted"
-  allow_duplicates: false
-  weight_method: "custom"
 
 special_songs:
   - song_id: 100    # 开场曲
