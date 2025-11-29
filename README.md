@@ -66,13 +66,16 @@ npm start
 
 ```yaml
 # 相对路径（相对于配置文件位置）
-path: "./music/song.mp3"
+- id: 1
+  path: "./music/song.mp3"
 
 # 绝对路径
-path: "/home/user/music/song.mp3"
+- id: 2
+  path: "/home/user/music/song.mp3"
 
 # URL
-path: "https://example.com/music/song.mp3"
+- id: 3
+  path: "https://example.com/music/song.mp3"
 ```
 
 ### 最小配置示例
@@ -142,7 +145,7 @@ ui:
 boomboom/
 ├── src/
 │   ├── routes/           # 路由页面
-│   │   ├── index.tsx     # 首页（配置上传）
+│   │   ├── config.tsx    # 首页（配置上传）
 │   │   └── guess.tsx     # 游戏页面
 │   ├── components/       # 组件
 │   │   ├── FileInput.tsx # 文件上传组件
