@@ -145,6 +145,7 @@ ui:
 boomboom/
 ├── src/
 │   ├── routes/           # 路由页面
+│   │   ├── index.tsx     # 入口（根据配置状态自动跳转）
 │   │   ├── config.tsx    # 首页（配置上传）
 │   │   └── guess.tsx     # 游戏页面
 │   ├── components/       # 组件
