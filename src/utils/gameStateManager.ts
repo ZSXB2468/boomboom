@@ -8,6 +8,7 @@ export interface GameState {
   currentSongIndex: number;
   playerScores: Record<Player["id"], number>;
   songStartTimeStamp: number;
+  gameStatus: 'playing' | 'round-summary' | 'game-end';
 }
 
 export interface Answer {
@@ -52,6 +53,21 @@ export class GameStateManager {
    */
   public getCurrentSongIndex(): number {
     return this.gameState.currentSongIndex;
+  }
+
+  /**
+   * 获取当前游戏状态
+   */
+  public getGameStatus(): GameState['gameStatus'] {
+    return this.gameState.gameStatus;
+  }
+
+  /**
+   * 设置游戏状态
+   */
+  public setGameStatus(status: GameState['gameStatus']) {
+    this.gameState.gameStatus = status;
+    this.save();
   }
 
   /**
@@ -246,6 +262,8 @@ export function detectValidGameState(): GameState | null {
     const currentRoundStr = localStorage.getItem('currentRound');
     const currentSongIndexStr = localStorage.getItem('currentSongIndex');
     const playerScoresStr = localStorage.getItem('playerScores');
+    const songStartTimeStampStr = localStorage.getItem('songStartTimeStamp');
+    const gameStatusStr = localStorage.getItem('gameStatus');
 
     if (!gameConfigStr || !songSequenceStr) {
       return null;
@@ -257,6 +275,8 @@ export function detectValidGameState(): GameState | null {
     const currentRound = currentRoundStr ? parseInt(currentRoundStr) : 0;
     const currentSongIndex = currentSongIndexStr ? parseInt(currentSongIndexStr) : 0;
     const playerScores = playerScoresStr ? JSON.parse(playerScoresStr) : {};
+    const songStartTimeStamp = songStartTimeStampStr ? parseInt(songStartTimeStampStr) : Date.now();
+    const gameStatus = (gameStatusStr as GameState['gameStatus']) || 'playing';
 
     // 验证配置是否有效
     if (!gameConfig || !gameConfig.players || !gameConfig.songs ||
@@ -277,7 +297,8 @@ export function detectValidGameState(): GameState | null {
       currentRound,
       currentSongIndex,
       playerScores,
-      songStartTimeStamp: Date.now() // 初始化为当前时间
+      songStartTimeStamp,
+      gameStatus
     };
 
   } catch (error) {
@@ -295,6 +316,8 @@ export function clearGameState(): void {
   localStorage.removeItem('currentRound');
   localStorage.removeItem('currentSongIndex');
   localStorage.removeItem('playerScores');
+  localStorage.removeItem('songStartTimeStamp');
+  localStorage.removeItem('gameStatus');
   localStorage.removeItem('finishSongs');
 }
 
@@ -316,5 +339,11 @@ export function saveGameState(gameState: Partial<GameState>): void {
   }
   if (gameState.playerScores) {
     localStorage.setItem('playerScores', JSON.stringify(gameState.playerScores));
+  }
+  if (gameState.songStartTimeStamp !== undefined) {
+    localStorage.setItem('songStartTimeStamp', gameState.songStartTimeStamp.toString());
+  }
+  if (gameState.gameStatus !== undefined) {
+    localStorage.setItem('gameStatus', gameState.gameStatus);
   }
 }

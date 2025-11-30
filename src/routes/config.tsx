@@ -46,13 +46,15 @@ export default function Config() {
       // 保存游戏状态
       saveGameState({
         gameConfig: config,
-        songSequence: songSequence, // 现在是 Song[][]
-        currentRound: 0, // 内部使用 0-based 索引
+        songSequence: songSequence,
+        currentRound: 0,
         currentSongIndex: 0,
         playerScores: config.players.reduce((scores, player) => {
           scores[player.id] = 0;
           return scores;
-        }, {} as Record<string, number>)
+        }, {} as Record<number, number>),
+        songStartTimeStamp: Date.now(),
+        gameStatus: 'playing'
       });
 
       snackbar({

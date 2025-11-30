@@ -1,0 +1,415 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+main {
+    height: 100vh;
+    width: 100vw;
+    padding: 24px;
+    box-sizing: border-box;
+}
+
+.game-container {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    gap: 24px;
+}
+
+.song-section {
+    flex: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+    backdrop-filter: blur(10px);
+}
+
+.music-player {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.round-info {
+    text-align: center;
+    font-size: 20px;
+    font-weight: 600;
+    color: #667eea;
+    padding: 12px 24px;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 24px;
+    backdrop-filter: blur(10px);
+}
+
+.round-label {
+    color: #667eea;
+}
+
+.song-count-label {
+    color: #999;
+    font-size: 16px;
+    margin-left: 4px;
+}
+
+.album-display {
+    position: relative;
+}
+
+.song-info {
+    text-align: center;
+    width: 100%;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+}
+
+.song-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #333;
+    margin: 0;
+    line-height: 1.2;
+    transition: all 0.3s ease;
+}
+
+.song-artist {
+    font-size: 20px;
+    color: #666;
+    font-weight: 500;
+    margin: 0;
+    transition: all 0.3s ease;
+}
+
+.song-album {
+    font-size: 16px;
+    color: #888;
+    font-style: italic;
+    margin: 0;
+    transition: all 0.3s ease;
+}
+
+.game-controls {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    width: 100%;
+}
+
+.next-song-btn,
+.buzzer-btn,
+.end-round-btn {
+    border: none;
+    padding: 16px 32px;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    animation: slideUp 0.3s ease;
+}
+
+.next-song-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+}
+
+.next-song-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.buzzer-btn {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    box-shadow: 0 4px 16px rgba(245, 87, 108, 0.3);
+}
+
+.buzzer-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(245, 87, 108, 0.4);
+}
+
+.buzzer-btn.active {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    box-shadow: 0 4px 16px rgba(79, 172, 254, 0.5);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 4px 16px rgba(79, 172, 254, 0.5);
+    }
+    50% {
+        box-shadow: 0 6px 24px rgba(79, 172, 254, 0.8);
+    }
+}
+
+.end-round-btn {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    color: white;
+    box-shadow: 0 4px 16px rgba(250, 112, 154, 0.3);
+}
+
+.end-round-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(250, 112, 154, 0.4);
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.rank-section {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+    backdrop-filter: blur(10px);
+    overflow: hidden;
+}
+
+/* 结算画面样式 */
+.summary-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.summary-card {
+    background: white;
+    border-radius: 24px;
+    padding: 48px;
+    max-width: 600px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.4s ease;
+}
+
+.summary-title {
+    font-size: 36px;
+    font-weight: 700;
+    color: #667eea;
+    text-align: center;
+    margin: 0 0 32px 0;
+}
+
+.summary-content h3 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 24px 0;
+    text-align: center;
+}
+
+.summary-rankings {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.summary-rank-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 24px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.summary-rank-item:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.summary-rank-item.winner {
+    background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+    color: white;
+    font-weight: 600;
+    transform: scale(1.05);
+}
+
+.summary-rank-item .rank-number {
+    font-size: 24px;
+    font-weight: 700;
+    color: #667eea;
+    min-width: 60px;
+    text-align: center;
+}
+
+.summary-rank-item.winner .rank-number {
+    font-size: 32px;
+    color: white;
+}
+
+.summary-rank-item .player-name {
+    flex: 1;
+    font-size: 20px;
+    font-weight: 500;
+    color: #333;
+}
+
+.summary-rank-item.winner .player-name {
+    color: white;
+}
+
+.summary-rank-item .player-score {
+    font-size: 20px;
+    font-weight: 700;
+    color: #667eea;
+}
+
+.summary-rank-item.winner .player-score {
+    color: white;
+}
+
+.continue-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 18px 32px;
+    border-radius: 12px;
+    font-size: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+}
+
+.continue-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .game-container {
+        flex-direction: column;
+        gap: 16px;
+        height: auto;
+    }
+
+    .song-section {
+        flex: none;
+        padding: 24px;
+    }
+
+    .music-player {
+        gap: 24px;
+    }
+
+    .song-title {
+        font-size: 24px;
+    }
+
+    .song-artist {
+        font-size: 18px;
+    }
+
+    .song-album {
+        font-size: 14px;
+    }
+
+    .rank-section {
+        flex: none;
+        min-height: 400px;
+    }
+
+    main {
+        padding: 16px;
+    }
+
+    .next-song-btn,
+    .buzzer-btn,
+    .end-round-btn {
+        padding: 12px 24px;
+        font-size: 16px;
+    }
+
+    .game-controls {
+        flex-wrap: wrap;
+    }
+
+    .summary-card {
+        padding: 32px 24px;
+        width: 95%;
+    }
+
+    .summary-title {
+        font-size: 28px;
+    }
+
+    .summary-content h3 {
+        font-size: 20px;
+    }
+
+    .summary-rank-item {
+        padding: 12px 16px;
+    }
+
+    .summary-rank-item .rank-number {
+        font-size: 20px;
+        min-width: 50px;
+    }
+
+    .summary-rank-item.winner .rank-number {
+        font-size: 28px;
+    }
+
+    .summary-rank-item .player-name {
+        font-size: 18px;
+    }
+
+    .summary-rank-item .player-score {
+        font-size: 18px;
+    }
+
+    .continue-btn {
+        font-size: 18px;
+        padding: 16px 28px;
+    }
+}
