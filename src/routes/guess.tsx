@@ -1,11 +1,13 @@
 import {Title} from "@solidjs/meta";
 import {createSignal, Show, onMount} from "solid-js";
 import {useNavigate} from "@solidjs/router";
+import {snackbar} from 'mdui/functions/snackbar.js';
 import Album from "~/components/Album";
 import ScoreBoard from "~/components/ScoreBoard";
 import {detectValidGameState, GameStateManager} from "~/utils/gameStateManager";
 import type {GameConfig, Song, Player} from "~/types/config";
 import type {Answer} from "~/utils/gameStateManager";
+import {useAudioPlayer} from "~/hooks/useAudioPlayer";
 import "~/styles/guess.css";
 
 export default function Guess() {
@@ -23,6 +25,16 @@ export default function Guess() {
 
   // 控制加分功能：只有在抢答后且未显示答案时才启用
   const enableScoring = () => !showAnswer() && buzzerTime() !== null;
+
+  // 初始化音频播放器
+  const audioPlayer = useAudioPlayer(
+    gameConfig()?.playback || {
+      clip_duration: 30,
+      start_position: 0,
+      fade_duration: 2,
+      volume: 0.7
+    }
+  );
 
   // Load game configuration on mount
   onMount(() => {
@@ -50,16 +62,31 @@ export default function Guess() {
     const song = manager.getCurrentSong();
     if (song) {
       setCurrentSong(song);
+
+      // 检测游戏状态，只有在 playing 状态才播放
+      const gameStatus = manager.getGameStatus();
+      if (gameStatus === 'playing') {
+        // 检测 Audio API 是否可用
+        if (!audioPlayer.isAudioAvailable) {
+          snackbar({
+            message: "⚠️ 音频功能不可用，游戏可以继续但无法播放音乐",
+            closeable: true,
+            placement: 'top',
+            autoCloseDelay: 5000,
+          });
+        } else {
+          audioPlayer.play(song);
+        }
+      }
+
+      // 显示结算界面
+      if (gameStatus === 'round-summary') {
+        setShowRoundSummary(true);
+      } else if (gameStatus === 'game-end') {
+        setShowGameEnd(true);
+      }
     } else {
       console.error('No current song available');
-    }
-
-    // 检测游戏状态并显示对应界面
-    const gameStatus = manager.getGameStatus();
-    if (gameStatus === 'round-summary') {
-      setShowRoundSummary(true);
-    } else if (gameStatus === 'game-end') {
-      setShowGameEnd(true);
     }
   });
 
@@ -97,6 +124,7 @@ export default function Guess() {
         const nextSong = manager.nextSong();
         if (nextSong) {
           setCurrentSong(nextSong);
+          audioPlayer.play(nextSong); // 播放新歌
         } else {
           console.error('No next song available');
         }
@@ -134,6 +162,7 @@ export default function Guess() {
         const nextSong = manager.getCurrentSong();
         if (nextSong) {
           setCurrentSong(nextSong);
+          audioPlayer.play(nextSong); // 播放新歌
           setCurrentRound(manager.getCurrentRound());
         }
       }
@@ -145,10 +174,11 @@ export default function Guess() {
     setShowAnswer(false);
   };
 
-  // 抢答按钮：记录抢答时间
+  // 抢答按钮：记录抢答时间并停止播放
   const handleBuzzer = () => {
     setBuzzerTime(Date.now());
-    console.log('抢答时间已记录');
+    audioPlayer.stop(); // 停止播放
+    console.log('抢答时间已记录，音乐已停止');
   };
 
   // 手动结束本轮：跳转到最后一首
@@ -160,6 +190,7 @@ export default function Guess() {
     const lastSong = manager.lastSong();
     if (lastSong) {
       setCurrentSong(lastSong);
+      audioPlayer.play(lastSong); // 播放最后一首
       setShowAnswer(false);
       setBuzzerTime(null); // 清除抢答时间
     }
@@ -174,6 +205,12 @@ export default function Guess() {
     setShowRoundSummary(false);
     setShowAnswer(false);
     setBuzzerTime(null);
+
+    // 播放当前歌曲（已在 nextRound 时设置）
+    const song = currentSong();
+    if (song) {
+      audioPlayer.play(song);
+    }
   };
 
 
@@ -272,6 +309,20 @@ export default function Guess() {
                 >
                   {buzzerTime() ? '已抢答 ✓' : '抢答'}
                 </button>
+
+                {/* 跳转副歌按钮：只在播放中且有副歌时显示 */}
+                <Show when={audioPlayer.isPlaying() && currentSong()?.chorus_time}>
+                  <button
+                    class="chorus-btn"
+                    onClick={() => {
+                      const song = currentSong();
+                      if (song) audioPlayer.jumpToChorus(song);
+                    }}
+                    title="跳转到副歌"
+                  >
+                    <span>副歌</span>
+                  </button>
+                </Show>
               </Show>
 
               {/* 下一首和结束本轮按钮：显示答案后显示 */}
