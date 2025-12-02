@@ -9,12 +9,14 @@ import {parseConfig, generateSongSequence} from "~/utils/configParser";
 import { createSignal, onMount } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import { detectValidGameState, saveGameState, clearGameState } from "~/utils/gameStateManager";
+import { selectLocalDirectory, hasLocalPaths, isFileSystemAccessSupported, clearFileCache } from "~/utils/fileSystemManager";
 import type { GameConfig, Song, Player } from "~/types/config";
 import '../styles/config.css'
 
 export default function Config() {
   const [gameConfig, setGameConfig] = createSignal<GameConfig | null>(null);
   const [isConfigLoaded, setIsConfigLoaded] = createSignal(false);
+  const [localDirectoryName, setLocalDirectoryName] = createSignal<string | null>(null);
   const navigate = useNavigate();
 
   // 页面加载时检测已有配置
@@ -25,12 +27,44 @@ export default function Config() {
       setGameConfig(existingGameState.gameConfig);
       setIsConfigLoaded(true);
 
-      snackbar({
-        message: "检测到已有游戏配置，已自动加载",
-        closeable: true,
-        placement: 'top',
-        autoCloseDelay: 2000,
-      });
+      // 检查配置是否包含本地路径
+      if (hasLocalPaths(existingGameState.gameConfig)) {
+        // 提示用户重新选择文件夹（因为刷新后会丢失）
+        snackbar({
+          message: "检测到配置中包含本地文件，请重新选择资源文件夹",
+          closeable: true,
+          placement: 'top',
+          autoCloseDelay: 5000,
+          action: "选择文件夹",
+          onActionClick: async () => {
+            try {
+              const directoryHandle = await selectLocalDirectory();
+              setLocalDirectoryName(directoryHandle.name);
+              snackbar({
+                message: `已选择文件夹: ${directoryHandle.name}`,
+                closeable: true,
+                placement: 'top',
+                autoCloseDelay: 2000,
+              });
+            } catch (error) {
+              dialog({
+                headline: "选择文件夹失败",
+                description: `${error instanceof Error ? error.message : '未知错误'}`,
+                closeOnEsc: true,
+                closeOnOverlayClick: true,
+                actions: [{ text: "确定" }]
+              });
+            }
+          }
+        });
+      } else {
+        snackbar({
+          message: "检测到已有游戏配置，已自动加载",
+          closeable: true,
+          placement: 'top',
+          autoCloseDelay: 2000,
+        });
+      }
     }
   });
 
@@ -97,8 +131,10 @@ export default function Config() {
           text: "确认清除",
           onClick: () => {
             clearGameState();
+            clearFileCache(); // 清除文件缓存
             setGameConfig(null);
             setIsConfigLoaded(false);
+            setLocalDirectoryName(null);
             snackbar({
               message: "游戏配置已清除",
               closeable: true,
@@ -118,40 +154,94 @@ export default function Config() {
       // 解析并验证配置文件
       const config = parseConfig(content);
 
-      // 生成歌曲序列
-      const songSequence = generateSongSequence(config);
-      console.log("生成的歌曲序列:", songSequence);
+      // 检查是否包含本地路径
+      if (hasLocalPaths(config)) {
+        if (!isFileSystemAccessSupported()) {
+          dialog({
+            headline: "浏览器不支持",
+            description: "配置文件中包含本地文件路径，但您的浏览器不支持本地文件访问。请使用在线文件或更新浏览器（推荐使用 Chrome、Edge）。",
+            closeOnEsc: true,
+            closeOnOverlayClick: true,
+            actions: [{ text: "确定" }]
+          });
+          throw new Error('浏览器不支持 File System Access API');
+        }
 
-      // 保存配置
-      setGameConfig(config);
-      setIsConfigLoaded(true);
+        // 提示用户选择本地文件夹
+        dialog({
+          headline: "需要选择资源文件夹",
+          description: "配置文件中包含本地文件路径（如 ./music/song.mp3）。请选择包含这些资源文件的文件夹。",
+          closeOnEsc: false,
+          closeOnOverlayClick: false,
+          actions: [
+            {
+              text: "选择文件夹",
+              onClick: async () => {
+                try {
+                  const directoryHandle = await selectLocalDirectory();
+                  setLocalDirectoryName(directoryHandle.name);
 
-      // 成功提示使用 snackbar
-      snackbar({
-        message: `配置文件 "${file.name}" 上传成功！共 ${config.songs.length} 首歌曲，${config.players.length} 位玩家，${config.game.rounds} 轮游戏`,
-        closeable: true,
-        placement: 'top',
-        autoCloseDelay: 3000,
-      });
+                  snackbar({
+                    message: `已选择文件夹: ${directoryHandle.name}`,
+                    closeable: true,
+                    placement: 'top',
+                    autoCloseDelay: 2000,
+                  });
+
+                  // 继续加载配置
+                  finishLoadingConfig(config, file);
+                } catch (error) {
+                  dialog({
+                    headline: "选择文件夹失败",
+                    description: `${error instanceof Error ? error.message : '未知错误'}`,
+                    closeOnEsc: true,
+                    closeOnOverlayClick: true,
+                    actions: [{ text: "确定" }]
+                  });
+                }
+              }
+            },
+            {
+              text: "取消",
+              onClick: () => {
+                throw new Error('用户取消选择文件夹');
+              }
+            }
+          ]
+        });
+      } else {
+        // 不包含本地路径，直接加载
+        finishLoadingConfig(config, file);
+      }
     } catch (error) {
       console.error("处理失败:", error);
-
-      // 失败提示使用 dialog
       dialog({
         headline: "上传失败",
         description: `文件处理时发生错误: ${error instanceof Error ? error.message : '未知错误'}`,
         closeOnEsc: true,
         closeOnOverlayClick: true,
-        actions: [
-          {
-            text: "确定",
-          }
-        ]
+        actions: [{ text: "确定" }]
       });
-
-      // 重新抛出错误，让 FileInput 知道处理失败
       throw error;
     }
+  };
+
+  const finishLoadingConfig = (config: GameConfig, file: File) => {
+    // 生成歌曲序列
+    const songSequence = generateSongSequence(config);
+    console.log("生成的歌曲序列:", songSequence);
+
+    // 保存配置
+    setGameConfig(config);
+    setIsConfigLoaded(true);
+
+    // 成功提示
+    snackbar({
+      message: `配置文件 "${file.name}" 上传成功！共 ${config.songs.length} 首歌曲，${config.players.length} 位玩家，${config.game.rounds} 轮游戏`,
+      closeable: true,
+      placement: 'top',
+      autoCloseDelay: 3000,
+    });
   };
 
   return (
@@ -164,6 +254,13 @@ export default function Config() {
         accept=".yaml,.yml"
         buttonText="上传配置文件"
       />
+
+      {/* 显示选择的本地文件夹 */}
+      {localDirectoryName() && (
+        <div class="local-directory-info">
+          <span>📁 资源文件夹: {localDirectoryName()}</span>
+        </div>
+      )}
 
       {/* 显示配置信息 */}
       {isConfigLoaded() && gameConfig() && (

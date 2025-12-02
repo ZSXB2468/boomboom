@@ -1,5 +1,6 @@
 import { createSignal, onCleanup } from "solid-js";
 import type { Song, PlaybackSettings } from "~/types/config";
+import { resolveFilePath } from "~/utils/fileSystemManager";
 
 export function useAudioPlayer(playbackSettings: PlaybackSettings) {
   // 检测 Audio API 是否可用
@@ -82,56 +83,62 @@ export function useAudioPlayer(playbackSettings: PlaybackSettings) {
   };
 
   // 播放歌曲
-  const play = (song: Song) => {
+  const play = async (song: Song) => {
     // 停止当前播放
     stop();
 
-    // 加载新歌曲
-    audioElement.src = song.path;
+    try {
+      // 解析音频文件路径
+      const resolvedPath = await resolveFilePath(song.path);
 
-    // 计算起始位置
-    let startTime = 0;
-    if (playbackSettings.start_position === -1) {
-      // 随机位置
-      const maxStart = Math.max(0, song.duration - (playbackSettings.clip_duration > 0 ? playbackSettings.clip_duration : 30));
-      startTime = Math.random() * maxStart;
-    } else if (playbackSettings.start_position === 0 && song.chorus_time) {
-      // 副歌位置
-      startTime = song.chorus_time;
-    } else if (playbackSettings.start_position > 0) {
-      // 指定位置
-      startTime = playbackSettings.start_position;
-    }
+      // 加载新歌曲
+      audioElement.src = resolvedPath;
 
-    audioElement.currentTime = startTime;
-
-    // 播放
-    audioElement.play().then(() => {
-      setIsPlaying(true);
-
-      // 淡入
-      if (playbackSettings.fade_duration > 0) {
-        fadeIn(playbackSettings.fade_duration);
+      // 计算起始位置
+      let startTime = 0;
+      if (playbackSettings.start_position === -1) {
+        // 随机位置
+        const maxStart = Math.max(0, song.duration - (playbackSettings.clip_duration > 0 ? playbackSettings.clip_duration : 30));
+        startTime = Math.random() * maxStart;
+      } else if (playbackSettings.start_position > 0) {
+        // 指定位置（秒数）
+        startTime = playbackSettings.start_position;
       }
+      // start_position === 0 或其他情况：从头开始播放（startTime = 0）
 
-      // 设置播放时长
-      if (playbackSettings.clip_duration > 0) {
-        const fadeOutTime = playbackSettings.clip_duration - playbackSettings.fade_duration;
-        clipTimeout = window.setTimeout(() => {
-          if (playbackSettings.fade_duration > 0) {
-            fadeOut(playbackSettings.fade_duration, () => {
+      audioElement.currentTime = startTime;
+
+      // 播放
+      audioElement.play().then(() => {
+        setIsPlaying(true);
+
+        // 淡入
+        if (playbackSettings.fade_duration > 0) {
+          fadeIn(playbackSettings.fade_duration);
+        }
+
+        // 设置播放时长
+        if (playbackSettings.clip_duration > 0) {
+          const fadeOutTime = playbackSettings.clip_duration - playbackSettings.fade_duration;
+          clipTimeout = window.setTimeout(() => {
+            if (playbackSettings.fade_duration > 0) {
+              fadeOut(playbackSettings.fade_duration, () => {
+                audioElement.pause();
+                setIsPlaying(false);
+              });
+            } else {
               audioElement.pause();
               setIsPlaying(false);
-            });
-          } else {
-            audioElement.pause();
-            setIsPlaying(false);
-          }
-        }, fadeOutTime * 1000);
-      }
-    }).catch(err => {
-      console.error('播放失败:', err);
-    });
+            }
+          }, fadeOutTime * 1000);
+        }
+      }).catch(err => {
+        console.error('播放失败:', err);
+      });
+    } catch (err) {
+      console.error('解析音频路径或播放失败:', err);
+      throw err; // 向上传递错误
+    }
   };
 
   // 停止播放

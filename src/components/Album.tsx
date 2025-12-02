@@ -1,4 +1,5 @@
-import { Show } from "solid-js";
+import { Show, createSignal, createEffect } from "solid-js";
+import { resolveFilePath } from "~/utils/fileSystemManager";
 import "./Album.css";
 
 interface AlbumProps {
@@ -9,6 +10,20 @@ interface AlbumProps {
 
 export default function Album(props: AlbumProps) {
     const size = props.size || 300;
+    const [resolvedSrc, setResolvedSrc] = createSignal<string>("");
+
+    // 解析图片路径
+    createEffect(async () => {
+      if (props.src) {
+        try {
+          const resolved = await resolveFilePath(props.src);
+          setResolvedSrc(resolved);
+        } catch (error) {
+          console.error("解析封面路径失败:", error);
+          setResolvedSrc(props.src); // 失败时使用原路径
+        }
+      }
+    });
 
     // SVG placeholder when answer is not shown
     const placeholderSvg = `data:image/svg+xml,${encodeURIComponent(`
@@ -39,7 +54,7 @@ export default function Album(props: AlbumProps) {
                 }
             >
                 <img
-                    src={props.src}
+                    src={resolvedSrc()}
                     alt="Album cover"
                     class="album-image"
                 />

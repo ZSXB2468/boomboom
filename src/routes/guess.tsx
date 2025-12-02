@@ -15,6 +15,7 @@ export default function Guess() {
   const [buzzerTime, setBuzzerTime] = createSignal<number | null>(null); // 抢答时间戳
   const [gameConfig, setGameConfig] = createSignal<GameConfig | null>(null);
   const [currentSong, setCurrentSong] = createSignal<Song | null>(null);
+  const [answeredSong, setAnsweredSong] = createSignal<Song | null>(null); // 保存刚才答题的歌曲
   const [players, setPlayers] = createSignal<Player[]>([]);
   const [playerScores, setPlayerScores] = createSignal<Record<number, number>>({}); // 玩家分数响应式状态
   const [currentRound, setCurrentRound] = createSignal(0);
@@ -107,6 +108,9 @@ export default function Guess() {
       return;
     }
 
+    // 保存当前歌曲，用于显示答案
+    const songBeforeAnswer = currentSong();
+
     // 使用 GameStateManager 添加分数
     manager.addScore(player, action, actualBuzzerTime);
 
@@ -114,17 +118,20 @@ export default function Guess() {
     setPlayerScores(manager.getPlayerScores());
 
     // 如果有答对的
-    if (action.songName || action.artist || action.album) {
-      // 关键：在推进前先判断是否是最后一首
+    const hasCorrectAnswer = action.songName || action.artist || action.album;
+    if (hasCorrectAnswer) {
+      // 保存答题的歌曲
+      setAnsweredSong(songBeforeAnswer);
+
+      // 判断是否是最后一首
       const isCurrentLastSong = manager.isLastSong();
       const isCurrentLastRound = manager.isLastRound();
 
       if (!isCurrentLastSong) {
-        // 不是最后一首，立即执行 nextSong
+        // 不是最后一首，立即执行 nextSong 但不播放
         const nextSong = manager.nextSong();
         if (nextSong) {
           setCurrentSong(nextSong);
-          audioPlayer.play(nextSong); // 播放新歌
         } else {
           console.error('No next song available');
         }
@@ -134,7 +141,11 @@ export default function Guess() {
           manager.setGameStatus('game-end');
         } else {
           manager.setGameStatus('round-summary');
-          manager.nextRound();
+          const nextSong = manager.nextRound();
+          if (nextSong) {
+            setCurrentSong(nextSong);
+            setCurrentRound(manager.getCurrentRound());
+          }
         }
       }
 
@@ -148,30 +159,29 @@ export default function Guess() {
     const manager = gameManager();
     if (!manager) return;
 
-    // 判断当前是否是最后一首（因为没有执行 nextSong，所以还是最后一首）
-    if (manager.getGameStatus() != 'playing') {
-      if (manager.getGameStatus() == 'game-end') {
-        // 最后一轮的最后一首，显示游戏结束
-        console.log("Game finished!");
-        setShowGameEnd(true);
-      } else {
-        // 不是最后一轮，显示轮次结算
-        console.log("Round finished!");
-        setShowRoundSummary(true);
-        // 立即推进到下一轮的第一首歌
-        const nextSong = manager.getCurrentSong();
-        if (nextSong) {
-          setCurrentSong(nextSong);
-          audioPlayer.play(nextSong); // 播放新歌
-          setCurrentRound(manager.getCurrentRound());
-        }
-      }
+    // 判断游戏状态
+    const gameStatus = manager.getGameStatus();
+
+    if (gameStatus === 'round-summary') {
+      // 显示轮次结算
+      setShowRoundSummary(true);
       setShowAnswer(false);
       return;
     }
 
-    // 不是最后一首，隐藏答案继续播放
+    if (gameStatus === 'game-end') {
+      // 显示游戏结束
+      setShowGameEnd(true);
+      setShowAnswer(false);
+      return;
+    }
+
+    // 普通情况：隐藏答案，播放下一首
     setShowAnswer(false);
+    const song = currentSong();
+    if (song) {
+      audioPlayer.play(song); // 在这里播放下一首
+    }
   };
 
   // 抢答按钮：记录抢答时间并停止播放
@@ -284,20 +294,26 @@ export default function Guess() {
 
             <div class="album-display">
               <Album
-                src={currentSong()?.cover || ""}
+                src={showAnswer() ? (answeredSong()?.cover || "") : (currentSong()?.cover || "")}
                 showAnswer={showAnswer()}
                 size={280}
               />
             </div>
             <div class="song-info">
               <div class="song-title">
-                {showAnswer() ? (currentSong()?.title || "Unknown Title") : "???"}
+                <span class="song-number-prefix">
+                  {showAnswer()
+                    ? `♪ #${answeredSong()?.id || '?'} `
+                    : `♪ #${currentSong()?.id || '?'} `
+                  }
+                </span>
+                {showAnswer() ? (answeredSong()?.title || "Unknown Title") : "???"}
               </div>
               <div class="song-artist">
-                {showAnswer() ? (currentSong()?.artist || "Unknown Artist") : "???"}
+                {showAnswer() ? (answeredSong()?.artist || "Unknown Artist") : "???"}
               </div>
               <div class="song-album">
-                {showAnswer() ? (currentSong()?.album || "Unknown Album") : "???"}
+                {showAnswer() ? (answeredSong()?.album || "Unknown Album") : "???"}
               </div>
             </div>
             <div class="game-controls">
