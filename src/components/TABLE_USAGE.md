@@ -19,7 +19,10 @@
 ## 基本用法
 
 ```tsx
-import Table, { TableColumn } from "./components/Table";
+
+// noinspection JSAnnotator
+
+import Table, {TableColumn} from "./components/Table";
 
 interface User {
   id: number;
@@ -52,12 +55,12 @@ function MyComponent() {
   ];
 
   const data: User[] = [
-    { id: 1, name: "张三", email: "zhangsan@example.com", age: 25 },
-    { id: 2, name: "李四", email: "lisi@example.com", age: 30 },
-    { id: 3, name: "王五", email: "wangwu@example.com", age: 28 },
+    {id: 1, name: "张三", email: "zhangsan@example.com", age: 25},
+    {id: 2, name: "李四", email: "lisi@example.com", age: 30},
+    {id: 3, name: "王五", email: "wangwu@example.com", age: 28},
   ];
 
-  return <Table columns={columns} data={data} />;
+  return <Table columns={columns} data={data}/>;
 }
 ```
 
@@ -180,8 +183,10 @@ function MyComponent() {
 ## 完整示例
 
 ```tsx
-import { createSignal } from "solid-js";
-import Table, { TableColumn } from "./components/Table";
+// noinspection JSAnnotator
+
+import {createSignal} from "solid-js";
+import Table, {TableColumn} from "./components/Table";
 
 interface Song {
   id: number;
@@ -277,7 +282,7 @@ export default function SongList() {
   };
 
   return (
-    <div style={{ padding: "20px" }}>
+    <div style={{padding: "20px"}}>
       <h2>歌曲列表</h2>
       <Table
         columns={columns}

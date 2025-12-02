@@ -1,0 +1,138 @@
+/* MDUI-styled Table Component */
+
+.mdui-table-container {
+  position: relative;
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 8px;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.mdui-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.mdui-table thead {
+  background-color: #f5f5f5;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.mdui-table th {
+  padding: 16px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.87);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.mdui-table td {
+  padding: 16px;
+  color: rgba(0, 0, 0, 0.87);
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.mdui-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Bordered variant */
+.mdui-table-bordered {
+  border: 1px solid #e0e0e0;
+}
+
+.mdui-table-bordered th,
+.mdui-table-bordered td {
+  border-right: 1px solid #e0e0e0;
+}
+
+.mdui-table-bordered th:last-child,
+.mdui-table-bordered td:last-child {
+  border-right: none;
+}
+
+/* Hoverable variant */
+.mdui-table-hoverable tbody tr {
+  transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mdui-table-hoverable tbody tr:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* Striped variant */
+.mdui-table-striped tbody tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+/* Clickable rows */
+.mdui-table-row-clickable {
+  cursor: pointer;
+}
+
+.mdui-table-row-clickable:active {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+/* Loading state */
+.mdui-table-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(2px);
+  z-index: 10;
+}
+
+.mdui-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e0e0e0;
+  border-top-color: #1976d2;
+  border-radius: 50%;
+  animation: mdui-spinner-rotate 0.8s linear infinite;
+}
+
+@keyframes mdui-spinner-rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Empty state */
+.mdui-table-empty {
+  padding: 48px 16px;
+  text-align: center;
+  color: rgba(0, 0, 0, 0.38);
+}
+
+.mdui-table-empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.mdui-table-empty-text {
+  font-size: 14px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .mdui-table th,
+  .mdui-table td {
+    padding: 12px 8px;
+    font-size: 13px;
+  }
+}
