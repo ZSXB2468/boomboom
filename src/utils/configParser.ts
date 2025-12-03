@@ -146,8 +146,9 @@ export function generateSongSequence(config: GameConfig): Song[][] | Song[] {
 
   if (game.round_end_mode === 'manual') {
     // manual 模式：返回一维数组（歌曲池）
-    // 特殊歌曲会在运行时通过 getSpecialSong 动态获取
-    return availableSongs;
+    // 根据选择规则打乱歌曲池
+    const shuffledSongs = shuffleSongs(availableSongs, selection_rules);
+    return shuffledSongs;
   } else {
     // fixed 模式：预生成所有轮次的歌曲序列（二维数组）
     const rounds: Song[][] = [];
@@ -182,6 +183,38 @@ export function generateSongSequence(config: GameConfig): Song[][] | Song[] {
 
     return rounds;
   }
+}
+
+/**
+ * 根据选择规则打乱歌曲列表
+ * @param songs 歌曲列表
+ * @param rules 选择规则
+ * @returns 打乱后的歌曲列表
+ */
+function shuffleSongs(songs: Song[], rules: SelectionRules): Song[] {
+  const result = [...songs];
+
+  switch (rules.mode) {
+    case 'random':
+      // Fisher-Yates 洗牌算法
+      for (let i = result.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [result[i], result[j]] = [result[j], result[i]];
+      }
+      break;
+
+    case 'weighted':
+      // 加权随机排序
+      result.sort(() => Math.random() - 0.5);
+      break;
+
+    case 'sequential':
+    default:
+      // 顺序模式不需要打乱
+      break;
+  }
+
+  return result;
 }
 
 /**
