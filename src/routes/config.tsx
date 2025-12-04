@@ -9,7 +9,7 @@ import {parseConfig, generateSongSequence} from "~/utils/configParser";
 import { createSignal, onMount } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import { detectValidGameState, saveGameState, clearGameState } from "~/utils/gameStateManager";
-import { selectLocalDirectory, hasLocalPaths, isFileSystemAccessSupported, clearFileCache } from "~/utils/fileSystemManager";
+import { selectLocalDirectory, hasLocalPaths, isFileSystemAccessSupported, clearFileCache, checkAndRestoreLocalDirectory, showDirectorySelectionPrompt, showConfigLoadedMessage } from "~/utils/fileSystemManager";
 import type { GameConfig, Song, Player } from "~/types/config";
 import '../styles/config.css'
 
@@ -20,50 +20,33 @@ export default function Config() {
   const navigate = useNavigate();
 
   // 页面加载时检测已有配置
-  onMount(() => {
+  onMount(async () => {
     const existingGameState = detectValidGameState();
     if (existingGameState) {
       console.log('Found existing valid game configuration');
       setGameConfig(existingGameState.gameConfig);
       setIsConfigLoaded(true);
 
-      // 检查配置是否包含本地路径
-      if (hasLocalPaths(existingGameState.gameConfig)) {
-        // 提示用户重新选择文件夹（因为刷新后会丢失）
-        snackbar({
-          message: "检测到配置中包含本地文件，请重新选择资源文件夹",
-          closeable: true,
-          placement: 'top',
-          autoCloseDelay: 5000,
-          action: "选择文件夹",
-          onActionClick: async () => {
-            try {
-              const directoryHandle = await selectLocalDirectory();
-              setLocalDirectoryName(directoryHandle.name);
-              snackbar({
-                message: `已选择文件夹: ${directoryHandle.name}`,
-                closeable: true,
-                placement: 'top',
-                autoCloseDelay: 2000,
-              });
-            } catch (error) {
-              dialog({
-                headline: "选择文件夹失败",
-                description: `${error instanceof Error ? error.message : '未知错误'}`,
-                closeOnEsc: true,
-                closeOnOverlayClick: true,
-                actions: [{ text: "确定" }]
-              });
-            }
+      // 使用统一的本地目录检查函数
+      const result = await checkAndRestoreLocalDirectory(existingGameState.gameConfig);
+
+      if (result.restored) {
+        if (result.directoryName) {
+          setLocalDirectoryName(result.directoryName);
+          showConfigLoadedMessage(`检测到已有游戏配置，已自动加载。资源文件夹: ${result.directoryName}`);
+        } else {
+          showConfigLoadedMessage("检测到已有游戏配置，已自动加载");
+        }
+      } else if (result.needsReselection) {
+        // 需要重新选择文件夹
+        showDirectorySelectionPrompt(
+          (directoryName: string) => {
+            setLocalDirectoryName(directoryName);
+          },
+          (error: string) => {
+            console.error('Directory selection failed:', error);
           }
-        });
-      } else {
-        snackbar({
-          message: "检测到已有游戏配置，已自动加载",
-          closeable: true,
-          placement: 'top',
-          autoCloseDelay: 2000,
-        });
+        );
       }
     }
   });

@@ -52,6 +52,17 @@ export function isOnlinePath(path: string): boolean {
 }
 
 /**
+ * 从 localStorage 获取上次使用的文件夹名称
+ */
+export function getLastDirectoryName(): string | null {
+  try {
+    return localStorage.getItem('lastDirectoryName');
+  } catch (error) {
+    return null;
+  }
+}
+
+/**
  * 从本地文件夹中读取文件并转换为 Blob URL
  */
 async function getFileFromDirectory(
@@ -175,5 +186,104 @@ export function hasLocalPaths(config: any): boolean {
  */
 export function hasDirectorySelected(): boolean {
   return fileSystemCache.directoryHandle !== null;
+}
+
+/**
+ * 检查并恢复本地目录
+ */
+export async function checkAndRestoreLocalDirectory(gameConfig: any): Promise<{
+  restored: boolean;
+  directoryName?: string;
+  needsReselection?: boolean;
+}> {
+  // 如果配置不包含本地路径，直接返回成功
+  if (!hasLocalPaths(gameConfig)) {
+    return { restored: true };
+  }
+
+  try {
+    // 检查当前是否有目录句柄
+    const handle = fileSystemCache.directoryHandle;
+    if (handle) {
+      console.log('✅ Found existing local directory:', handle.name);
+      return {
+        restored: true,
+        directoryName: handle.name
+      };
+    }
+
+    // 恢复失败，检查是否有保存的目录名
+    const lastDirName = getLastDirectoryName();
+    return {
+      restored: false,
+      needsReselection: true,
+      directoryName: lastDirName || undefined
+    };
+  } catch (error) {
+    console.error('Failed to restore local directory:', error);
+    return {
+      restored: false,
+      needsReselection: true
+    };
+  }
+}
+
+/**
+ * 显示目录选择提示（使用 mdui）
+ */
+export function showDirectorySelectionPrompt(
+  onSuccess: (directoryName: string) => void,
+  onError: (error: string) => void
+): void {
+  // 动态导入 mdui 函数
+  import('mdui/functions/snackbar.js').then(({ snackbar }) => {
+    import('mdui/functions/dialog.js').then(({ dialog }) => {
+      snackbar({
+        message: "检测到配置中包含本地文件，请重新选择资源文件夹",
+        closeable: true,
+        placement: 'top',
+        autoCloseDelay: 5000,
+        action: "选择文件夹",
+        onActionClick: async () => {
+          try {
+            const directoryHandle = await selectLocalDirectory();
+            onSuccess(directoryHandle.name);
+
+            snackbar({
+              message: `已选择文件夹: ${directoryHandle.name}`,
+              closeable: true,
+              placement: 'top',
+              autoCloseDelay: 2000,
+            });
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : '未知错误';
+            onError(errorMessage);
+
+            dialog({
+              headline: "选择文件夹失败",
+              description: errorMessage,
+              closeOnEsc: true,
+              closeOnOverlayClick: true,
+              actions: [{ text: "确定" }]
+            });
+          }
+        }
+      });
+    });
+  });
+}
+
+/**
+ * 显示配置加载成功的提示
+ */
+export function showConfigLoadedMessage(message: string): void {
+  import('mdui/functions/snackbar.js').then(({ snackbar }) => {
+    snackbar({
+      message,
+      closeable: true,
+      placement: 'top',
+      autoCloseDelay: 2000,
+    });
+  });
 }
 

@@ -8,6 +8,7 @@ import {detectValidGameState, GameStateManager} from "~/utils/gameStateManager";
 import type {GameConfig, Song, Player} from "~/types/config";
 import type {Answer} from "~/utils/gameStateManager";
 import {useAudioPlayer} from "~/hooks/useAudioPlayer";
+import {checkAndRestoreLocalDirectory, showDirectorySelectionPrompt} from "~/utils/fileSystemManager";
 import "~/styles/guess.css";
 
 export default function Guess() {
@@ -22,6 +23,7 @@ export default function Guess() {
   const [gameManager, setGameManager] = createSignal<GameStateManager | null>(null);
   const [showRoundSummary, setShowRoundSummary] = createSignal(false); // 显示轮次结算
   const [showGameEnd, setShowGameEnd] = createSignal(false); // 显示游戏结束
+  const [localDirectoryName, setLocalDirectoryName] = createSignal<string | null>(null);
   const navigate = useNavigate();
 
   // 控制加分功能：只有在抢答后且未显示答案时才启用
@@ -38,7 +40,7 @@ export default function Guess() {
   );
 
   // Load game configuration on mount
-  onMount(() => {
+  onMount(async () => {
     // 检查 localStorage 中是否有有效的游戏配置
     const detectedGameState = detectValidGameState();
     if (!detectedGameState) {
@@ -48,6 +50,27 @@ export default function Guess() {
     }
 
     console.log('Found valid game configuration');
+
+    // 检查并恢复本地目录
+    const result = await checkAndRestoreLocalDirectory(detectedGameState.gameConfig);
+
+    if (result.restored) {
+      if (result.directoryName) {
+        setLocalDirectoryName(result.directoryName);
+        console.log('✅ Local directory restored:', result.directoryName);
+      }
+    } else if (result.needsReselection) {
+      // 需要重新选择文件夹
+      showDirectorySelectionPrompt(
+        (directoryName: string) => {
+          setLocalDirectoryName(directoryName);
+          console.log('✅ Local directory selected:', directoryName);
+        },
+        (error: string) => {
+          console.error('Directory selection failed:', error);
+        }
+      );
+    }
 
     // 创建 GameStateManager 实例
     const manager = new GameStateManager(detectedGameState);
