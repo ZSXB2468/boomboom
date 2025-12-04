@@ -108,6 +108,7 @@ export class GameStateManager {
       } else {
         if(nextSong){
           this.gameState.songSequence.shift();
+          this.save()
         }
         if (songs.length > 0) {
           return songs[0];

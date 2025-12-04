@@ -317,7 +317,7 @@ export default function Guess() {
 
             <div class="album-display">
               <Album
-                src={showAnswer() ? (answeredSong()?.cover || "") : (currentSong()?.cover || "")}
+                src={answeredSong()?.cover || ""}
                 showAnswer={showAnswer()}
                 size={280}
               />
