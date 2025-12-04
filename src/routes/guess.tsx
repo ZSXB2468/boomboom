@@ -64,10 +64,40 @@ export default function Guess() {
       showDirectorySelectionPrompt(
         (directoryName: string) => {
           setLocalDirectoryName(directoryName);
-          console.log('✅ Local directory selected:', directoryName);
+          console.log('✅ Local directory selected:', directoryName, 'Current directory:', localDirectoryName());
         },
         (error: string) => {
           console.error('Directory selection failed:', error);
+        },
+        // 回调：选择完文件夹后立即开始播放
+        (directoryHandle: FileSystemDirectoryHandle) => {
+          console.log('🎵 Directory selected, attempting to start playback...');
+
+          // 获取当前歌曲和游戏状态
+          const manager = gameManager();
+          const song = currentSong();
+
+          if (manager && song) {
+            const gameStatus = manager.getGameStatus();
+            console.log('Game status:', gameStatus, 'Current song:', song.title);
+
+            if (gameStatus === 'playing') {
+              // 检测 Audio API 是否可用
+              if (!audioPlayer.isAudioAvailable) {
+                import('mdui/functions/snackbar.js').then(({ snackbar }) => {
+                  snackbar({
+                    message: "⚠️ 音频功能不可用，游戏可以继续但无法播放音乐",
+                    closeable: true,
+                    placement: 'top',
+                    autoCloseDelay: 5000,
+                  });
+                });
+              } else {
+                console.log('🎵 Starting audio playback...');
+                audioPlayer.play(song);
+              }
+            }
+          }
         }
       );
     }

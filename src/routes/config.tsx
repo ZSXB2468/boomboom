@@ -161,7 +161,13 @@ export default function Config() {
               text: "选择文件夹",
               onClick: async () => {
                 try {
-                  const directoryHandle = await selectLocalDirectory();
+                  const directoryHandle = await selectLocalDirectory(
+                    // 回调：选择完文件夹后进行配置验证
+                    (_handle) => {
+                      console.log('✅ Directory selected in config, validating resources...');
+                      // 这里可以添加文件验证逻辑
+                    }
+                  );
                   setLocalDirectoryName(directoryHandle.name);
 
                   snackbar({

@@ -23,7 +23,9 @@ export function isFileSystemAccessSupported(): boolean {
 /**
  * 请求用户选择本地文件夹
  */
-export async function selectLocalDirectory(): Promise<FileSystemDirectoryHandle> {
+export async function selectLocalDirectory(
+  onDirectorySelected?: (directoryHandle: FileSystemDirectoryHandle) => void
+): Promise<FileSystemDirectoryHandle> {
   if (!isFileSystemAccessSupported()) {
     throw new Error('浏览器不支持 File System Access API，请使用在线文件或更新浏览器');
   }
@@ -34,6 +36,19 @@ export async function selectLocalDirectory(): Promise<FileSystemDirectoryHandle>
   });
 
   fileSystemCache.directoryHandle = directoryHandle;
+
+  // 保存目录名到 localStorage
+  try {
+    localStorage.setItem('lastDirectoryName', directoryHandle.name);
+  } catch (error) {
+    console.warn('Failed to save directory name to localStorage:', error);
+  }
+
+  // 调用回调函数
+  if (onDirectorySelected) {
+    onDirectorySelected(directoryHandle);
+  }
+
   return directoryHandle;
 }
 
@@ -233,7 +248,8 @@ export async function checkAndRestoreLocalDirectory(gameConfig: any): Promise<{
  */
 export function showDirectorySelectionPrompt(
   onSuccess: (directoryName: string) => void,
-  onError: (error: string) => void
+  onError: (error: string) => void,
+  onDirectorySelected?: (directoryHandle: FileSystemDirectoryHandle) => void
 ): void {
   // 动态导入 mdui 函数
   import('mdui/functions/snackbar.js').then(({ snackbar }) => {
@@ -246,7 +262,7 @@ export function showDirectorySelectionPrompt(
         action: "选择文件夹",
         onActionClick: async () => {
           try {
-            const directoryHandle = await selectLocalDirectory();
+            const directoryHandle = await selectLocalDirectory(onDirectorySelected);
             onSuccess(directoryHandle.name);
 
             snackbar({
